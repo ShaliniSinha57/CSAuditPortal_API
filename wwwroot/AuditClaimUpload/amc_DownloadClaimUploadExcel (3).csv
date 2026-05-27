@@ -1,0 +1,4 @@
+CLAIMID,CUSTOMERNAME,AMOUNT,STATUS
+101,Alice,5000,Approved
+102,Bob,3000,Pending
+103,Charlie,4500,Rejected

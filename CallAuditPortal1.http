@@ -1,0 +1,6 @@
+@CallAuditPortal1_HostAddress = http://localhost:5102
+
+GET {{CallAuditPortal1_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
