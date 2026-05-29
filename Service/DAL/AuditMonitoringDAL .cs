@@ -80,6 +80,43 @@ namespace CallAuditPortal1.Service.DAL
                     "Submitted To Branch Successfully";
             }
         }
+
+        public async Task<string> Download(DownloadRequest request)
+        {
+            using (OracleConnection con = new OracleConnection(_configuration.GetConnectionString("DefaultConnection")))
+            {
+                await con.OpenAsync();
+                string query = @"";
+
+                using (OracleCommand cmd = new OracleCommand(query, con))
+                {
+                    cmd.Parameters.Add("ID", OracleDbType.Varchar2).Value = request.Ids.ToString();
+                    await cmd.ExecuteNonQueryAsync();
+
+                }
+
+                return "Downloaded Successfully !";
+            }
+        }
+
+        public async Task<string> Reject(RejectRequest request)
+        {
+            using (OracleConnection con = new OracleConnection(_configuration.GetConnectionString("DefaultConnection")))
+            {
+                await con.OpenAsync();
+                string query = @"";
+
+                using (OracleCommand cmd = new OracleCommand(query, con))
+                {
+                    cmd.Parameters.Add("ID", OracleDbType.Varchar2).Value = request.Ids.ToString();
+                    cmd.Parameters.Add("Reason", OracleDbType.Varchar2).Value = request.Reason;
+                    await cmd.ExecuteNonQueryAsync();
+
+                }
+
+                return "Rejected Successfully !";
+            }
+        }
     }
 }
 
