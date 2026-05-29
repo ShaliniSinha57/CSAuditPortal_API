@@ -20,10 +20,7 @@ namespace CallAuditPortal1.Service.DAL
             using (OracleConnection con = new OracleConnection(_configuration.GetConnectionString("DefaultConnection")))
             {
                 await con.OpenAsync();
-                string query = @" SELECT ID,CLAIM_NO, STATUS, AUDIT_TYPE, AUDIT_DATE,  ECG_LGC_EMAIL  FROM CS_AUDIT_MAIN
-                  WHERE STATUS = :STATUS  AND AUDIT_TYPE = :AUDIT_TYPE
-            AND AUDIT_DATE BETWEEN TO_DATE :FROM_DATE,'DD-MM-YYYY')
-            AND   TO_DATE :TO_DATE,'DD-MM-YYYY')";
+                string query = @" ";
 
                 using (OracleCommand cmd = new OracleCommand(query, con))
                 {
@@ -57,9 +54,7 @@ namespace CallAuditPortal1.Service.DAL
             {
                 await con.OpenAsync();
 
-                string query = @" UPDATE CS_AUDIT_MAIN
-            SET STATUS =  'SUBMITTED_TO_BRANCH'
-            WHERE ID = :ID";
+                string query = @" ";
 
                 using (OracleCommand cmd = new OracleCommand(query, con))
                 {

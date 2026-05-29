@@ -65,7 +65,27 @@ namespace CallAuditPortal1.Controllers
         throw;
       }
     }
+        [HttpGet("verify-upload")]
+        public async Task<IActionResult> VerifyUpload(string sessionId, string templateId)
 
 
-  }
+        {
+            try
+            {
+                var data = await _service.VerifyUpload(sessionId, templateId);
+
+                return Ok(new
+                {
+                    success = true,
+                    data = data
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+
+    }
 }

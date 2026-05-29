@@ -1,11 +1,15 @@
 using CallAuditPortal1.Service.Interface;
 using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Office.Word;
+using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
 using Oracle.ManagedDataAccess.Client;
 using Oracle.ManagedDataAccess.Types;
 using System.Data;
+using System.Dynamic;
 using System.Globalization;
+using System.Security.Cryptography;
 
 namespace CallAuditPortal1.Service
 {
@@ -196,6 +200,53 @@ namespace CallAuditPortal1.Service
                 return $"Error while inserting data : {ex.Message}";
             }
         }
+
+        public async Task<List<dynamic>> VerifyUpload(string sessionId,string templateId)
+        {
+            List<dynamic> data = new List<dynamic>();
+
+            using (OracleConnection con = new OracleConnection(
+                    _configuration.GetConnectionString("DefaultConnection")))
+            {
+                await con.OpenAsync();
+
+                string query = @"";
+
+                using (OracleCommand cmd =
+                       new OracleCommand(query, con))
+                {
+                    cmd.Parameters.Add("sessionId",
+                        OracleDbType.Varchar2).Value = sessionId;
+
+                    cmd.Parameters.Add("templateId",
+                        OracleDbType.Varchar2).Value = templateId;
+
+                    using (OracleDataReader reader =
+                           await cmd.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            var row = new ExpandoObject()
+                                      as IDictionary<string, object>;
+
+                            for (int i = 0; i < reader.FieldCount; i++)
+                            {
+                                row.Add(
+                                    reader.GetName(i),
+                                    reader.IsDBNull(i)
+                                    ? null
+                                    : reader.GetValue(i));
+                            }
+
+                            data.Add(row);
+                        }
+                    }
+                }
+            }
+
+            return data;
+        }
+
 
 
 
