@@ -13,7 +13,7 @@
 
     public class RejectUploadedDataRequest
     {
-        public string Message { get; set; }
+        public string Reason { get; set; }
         public List<int> SelectedIds { get; set; }
     }
 }
