@@ -20,14 +20,6 @@ namespace CallAuditPortal1.Service.DAL
       _configuration = configuration;
 
     }
-    private OracleConnection objConn;
-
-    private OracleCommand objCmd;
-
-    private OracleDataAdapter objDA;
-
-        
-
         public List<Dictionary<string, object>> ReadAuditDropList()
         {
             try

@@ -31,6 +31,20 @@ namespace CallAuditPortal1.Controllers
             var result = await _auditMonitoringService.SubmitToBranch(request);
             return Ok(result);
         }
+        [HttpPost("Download")]
+        public async Task<IActionResult> Download([FromBody] DownloadRequest request)
+        {
+            var result = await _auditMonitoringService.Download(request);
+            return Ok(result);
+        }
+        [HttpPost("Reject")]
+        public async Task<IActionResult> Reject([FromBody] RejectRequest request)
+        {
+            var result = await _auditMonitoringService.Reject(request);
+            return Ok(result);
+        }
+
+
     }
 
 }

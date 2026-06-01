@@ -1,11 +1,9 @@
+using CallAuditPortal1.Model.RequestDTO;
 using CallAuditPortal1.Service.Interface;
-using ClosedXML.Excel;
-using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
 using Oracle.ManagedDataAccess.Client;
-using Oracle.ManagedDataAccess.Types;
 using System.Data;
-using System.Globalization;
+using System.Dynamic;
 
 namespace CallAuditPortal1.Service
 {
@@ -197,7 +195,103 @@ namespace CallAuditPortal1.Service
             }
         }
 
+        public async Task<List<dynamic>> VerifyUpload(string sessionId,string templateId)
+        {
+            List<dynamic> data = new List<dynamic>();
 
+            using (OracleConnection con = new OracleConnection(
+                    _configuration.GetConnectionString("DefaultConnection")))
+            {
+                await con.OpenAsync();
+
+                string query = @"";
+
+                using (OracleCommand cmd =
+                       new OracleCommand(query, con))
+                {
+                    cmd.Parameters.Add("sessionId",
+                        OracleDbType.Varchar2).Value = sessionId;
+
+                    cmd.Parameters.Add("templateId",
+                        OracleDbType.Varchar2).Value = templateId;
+
+                    using (OracleDataReader reader =
+                           await cmd.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            var row = new ExpandoObject()
+                                      as IDictionary<string, object>;
+
+                            for (int i = 0; i < reader.FieldCount; i++)
+                            {
+                                row.Add(
+                                    reader.GetName(i),
+                                    reader.IsDBNull(i)
+                                    ? null
+                                    : reader.GetValue(i));
+                            }
+
+                            data.Add(row);
+                        }
+                    }
+                }
+            }
+
+            return data;
+        }
+
+
+        public async Task<string> SaveStatus(SaveStatusRequest request)
+        {
+            using (OracleConnection con = new OracleConnection(
+                    _configuration.GetConnectionString("DefaultConnection")))
+            {
+                await con.OpenAsync();
+
+                string query = @"";
+
+                using (OracleCommand cmd =
+                       new OracleCommand(query, con))
+                {
+                    cmd.Parameters.Add("statue",
+                        OracleDbType.Varchar2).Value = request.Status;
+
+                    cmd.Parameters.Add("targetedIds",
+                        OracleDbType.Varchar2).Value = request.SelectedIds.ToString();
+                    await cmd.ExecuteReaderAsync();
+
+                    return "";
+
+                    
+                }
+            }
+            
+        }
+
+        public async Task<string> RejectStatus(RejectUploadedDataRequest request)
+        {
+            using (OracleConnection con = new OracleConnection(
+                    _configuration.GetConnectionString("DefaultConnection")))
+            {
+                await con.OpenAsync();
+
+                string query = @"";
+
+                using (OracleCommand cmd =
+                       new OracleCommand(query, con))
+                {
+                    cmd.Parameters.Add("message",
+                        OracleDbType.Varchar2).Value = request.Reason;
+
+                    cmd.Parameters.Add("ids",
+                        OracleDbType.Varchar2).Value = request.SelectedIds.ToString();
+
+                    return "";
+                    
+                }
+            }
+        }
 
     }
 }

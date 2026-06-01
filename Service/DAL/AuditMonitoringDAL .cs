@@ -20,10 +20,7 @@ namespace CallAuditPortal1.Service.DAL
             using (OracleConnection con = new OracleConnection(_configuration.GetConnectionString("DefaultConnection")))
             {
                 await con.OpenAsync();
-                string query = @" SELECT ID,CLAIM_NO, STATUS, AUDIT_TYPE, AUDIT_DATE,  ECG_LGC_EMAIL  FROM CS_AUDIT_MAIN
-                  WHERE STATUS = :STATUS  AND AUDIT_TYPE = :AUDIT_TYPE
-            AND AUDIT_DATE BETWEEN TO_DATE :FROM_DATE,'DD-MM-YYYY')
-            AND   TO_DATE :TO_DATE,'DD-MM-YYYY')";
+                string query = @" ";
 
                 using (OracleCommand cmd = new OracleCommand(query, con))
                 {
@@ -57,9 +54,7 @@ namespace CallAuditPortal1.Service.DAL
             {
                 await con.OpenAsync();
 
-                string query = @" UPDATE CS_AUDIT_MAIN
-            SET STATUS =  'SUBMITTED_TO_BRANCH'
-            WHERE ID = :ID";
+                string query = @" ";
 
                 using (OracleCommand cmd = new OracleCommand(query, con))
                 {
@@ -83,6 +78,43 @@ namespace CallAuditPortal1.Service.DAL
                 await smtp.SendMailAsync(mail);
                 return
                     "Submitted To Branch Successfully";
+            }
+        }
+
+        public async Task<string> Download(DownloadRequest request)
+        {
+            using (OracleConnection con = new OracleConnection(_configuration.GetConnectionString("DefaultConnection")))
+            {
+                await con.OpenAsync();
+                string query = @"";
+
+                using (OracleCommand cmd = new OracleCommand(query, con))
+                {
+                    cmd.Parameters.Add("ID", OracleDbType.Varchar2).Value = request.Ids.ToString();
+                    await cmd.ExecuteNonQueryAsync();
+
+                }
+
+                return "Downloaded Successfully !";
+            }
+        }
+
+        public async Task<string> Reject(RejectRequest request)
+        {
+            using (OracleConnection con = new OracleConnection(_configuration.GetConnectionString("DefaultConnection")))
+            {
+                await con.OpenAsync();
+                string query = @"";
+
+                using (OracleCommand cmd = new OracleCommand(query, con))
+                {
+                    cmd.Parameters.Add("ID", OracleDbType.Varchar2).Value = request.Ids.ToString();
+                    cmd.Parameters.Add("Reason", OracleDbType.Varchar2).Value = request.Reason;
+                    await cmd.ExecuteNonQueryAsync();
+
+                }
+
+                return "Rejected Successfully !";
             }
         }
     }
