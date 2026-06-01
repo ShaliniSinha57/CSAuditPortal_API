@@ -1,13 +1,8 @@
 
+using CallAuditPortal1.Model.RequestDTO;
 using CallAuditPortal1.Service.BAL;
 using CallAuditPortal1.Service.Interface;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
-using Newtonsoft.Json;
-using PuppeteerSharp;
-using System.Data;
-using System.Text.Json;
 
 namespace CallAuditPortal1.Controllers
 {
@@ -65,7 +60,42 @@ namespace CallAuditPortal1.Controllers
         throw;
       }
     }
+        [HttpGet("verify-upload")]
+        public async Task<IActionResult> VerifyUpload(string sessionId, string templateId)
 
 
-  }
+        {
+            try
+            {
+                var data = await _service.VerifyUpload(sessionId, templateId);
+
+                return Ok(new
+                {
+                    success = true,
+                    data = data
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+
+        [HttpPost("save-status")]
+        public async Task<IActionResult> SaveStatus([FromBody] SaveStatusRequest request)
+        {
+            var result = await _service.SaveStatus(request);
+            return Ok(result);
+        }
+
+        [HttpPost("reject-status")]
+        public async Task<IActionResult> RejectStatus([FromBody] RejectUploadedDataRequest request)
+        {
+            var result = await _service.RejectStatus(request);
+            return Ok(result);
+        }
+
+
+    }
 }

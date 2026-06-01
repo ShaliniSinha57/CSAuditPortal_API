@@ -22,5 +22,17 @@
 
             public string Email { get; set; }
         }
+
+
+        public class DownloadRequest
+        {
+            public List<int> Ids { get; set; }
+        }
+
+    public class RejectRequest
+    {
+        public string Reason { get; set; } = string.Empty;
+        public List<int> Ids { get; set; }
     }
+}
 

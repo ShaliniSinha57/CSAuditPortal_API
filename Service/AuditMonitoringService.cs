@@ -20,6 +20,14 @@ namespace CallAuditPortal1.Service
         {
             return await _auditMonitoringDAL.SubmitToBranch(request);
         }
+        public async Task<string> Download(DownloadRequest request)
+        {
+            return await _auditMonitoringDAL.Download(request);
+        }
+        public async Task<string> Reject(RejectRequest request)
+        {
+            return await _auditMonitoringDAL.Reject(request);
+        }
     }
 
     
