@@ -1,16 +1,9 @@
 using CallAuditPortal1.Model.RequestDTO;
 using CallAuditPortal1.Service.Interface;
-using ClosedXML.Excel;
-using DocumentFormat.OpenXml.Office.Word;
-using DocumentFormat.OpenXml.Wordprocessing;
-using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
 using Oracle.ManagedDataAccess.Client;
-using Oracle.ManagedDataAccess.Types;
 using System.Data;
 using System.Dynamic;
-using System.Globalization;
-using System.Security.Cryptography;
 
 namespace CallAuditPortal1.Service
 {
@@ -289,7 +282,7 @@ namespace CallAuditPortal1.Service
                        new OracleCommand(query, con))
                 {
                     cmd.Parameters.Add("message",
-                        OracleDbType.Varchar2).Value = request.Message;
+                        OracleDbType.Varchar2).Value = request.Reason;
 
                     cmd.Parameters.Add("ids",
                         OracleDbType.Varchar2).Value = request.SelectedIds.ToString();
