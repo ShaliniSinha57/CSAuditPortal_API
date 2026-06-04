@@ -45,13 +45,15 @@ namespace CallAuditPortal1.Controllers
     [HttpPost("ProcessUploadData")]
     public async Task<IActionResult> ProcessUploadData(string fullPath, string auditType, string auditDate)
     {
+            string sessionid = string.Empty;
       try
       {
-        var result = await _service.InsertDataIntoTempTable(fullPath, auditType, auditDate);
+        var data = await _service.InsertDataIntoTempTable(fullPath, auditType, auditDate);
                 return Ok(new
                 {
                     status = "Success",
-                    data = result
+                    data = data.result,
+                    sessionId = data.session_Id
                 });
             }
       catch (Exception)
@@ -60,14 +62,12 @@ namespace CallAuditPortal1.Controllers
         throw;
       }
     }
-        [HttpGet("verify-upload")]
-        public async Task<IActionResult> VerifyUpload(string sessionId, string templateId)
-
-
+        [HttpPost("search-audit")]
+        public async Task<IActionResult> SearchAuditData([FromBody] AuditSearchRequest request)
         {
             try
             {
-                var data = await _service.VerifyUpload(sessionId, templateId);
+                var data = await _service.SearchAuditData(request);
 
                 return Ok(new
                 {
@@ -86,14 +86,21 @@ namespace CallAuditPortal1.Controllers
         public async Task<IActionResult> SaveStatus([FromBody] SaveStatusRequest request)
         {
             var result = await _service.SaveStatus(request);
-            return Ok(result);
+            return Ok(new 
+            {
+                message = "Data Saved Successfully"
+            });
         }
 
         [HttpPost("reject-status")]
         public async Task<IActionResult> RejectStatus([FromBody] RejectUploadedDataRequest request)
         {
             var result = await _service.RejectStatus(request);
-            return Ok(result);
+            return Ok(new 
+            { 
+                message = "File Rejected Successfully"
+            }
+            );
         }
 
 

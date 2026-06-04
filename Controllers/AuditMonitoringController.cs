@@ -18,12 +18,7 @@ namespace CallAuditPortal1.Controllers
         {
             _auditMonitoringService = auditMonitoringService;
         }
-        [HttpPost("SearchAuditData")]
-        public async Task<IActionResult> SearchAuditData([FromBody] AuditSearchRequest request)
-        {
-            var result = await _auditMonitoringService.SearchAuditData(request);
-            return Ok(result);
-        }
+        
 
         [HttpPost("SubmitToBranch")]
         public async Task<IActionResult> SubmitToBranch([FromBody] SubmitBranchRequest request)
