@@ -12,10 +12,7 @@ namespace CallAuditPortal1.Service
         {
             _auditMonitoringDAL = auditMonitoringDAL;
         }
-        public async Task<List<AuditMonitoringModel>> SearchAuditData(AuditSearchRequest request)
-        {
-            return await _auditMonitoringDAL.SearchAuditData(request);
-        }
+        
         public async Task<string> SubmitToBranch(SubmitBranchRequest request)
         {
             return await _auditMonitoringDAL.SubmitToBranch(request);

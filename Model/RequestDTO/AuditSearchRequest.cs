@@ -3,11 +3,11 @@
     
     public class AuditSearchRequest
     {
-        public string SessionId { get; set; }
+        public string? SessionId { get; set; }
         public int? AuditTypeId { get; set; }
-        public string AuditStatus { get; set; }
-        public string FromDate { get; set; }
-        public string ToDate { get; set; }
+        public string? AuditStatus { get; set; }
+        public string? FromDate { get; set; }
+        public string? ToDate { get; set; }
         public int? Page { get; set; }
         public int? Limit { get; set; }
     }

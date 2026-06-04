@@ -232,15 +232,19 @@ namespace CallAuditPortal1.Service
 
                         cmd.Parameters.Add("p_audit_type_id", OracleDbType.Int32)
                            .Value = request.AuditTypeId;
-
+                       
                         cmd.Parameters.Add("p_screen_type", OracleDbType.Varchar2)
-                           .Value = "VERIFY";
+                           .Value = string.IsNullOrWhiteSpace(request.SessionId)? "SUBMIT" : "VERIFY";
 
                         cmd.Parameters.Add("p_from_date", OracleDbType.Varchar2)
                            .Value = request.FromDate;
 
                         cmd.Parameters.Add("p_to_date", OracleDbType.Varchar2)
                            .Value = request.ToDate;
+                        cmd.Parameters.Add("p_pageSize", OracleDbType.Int32)
+                           .Value = request.Limit;
+                        cmd.Parameters.Add("p_pageIndex", OracleDbType.Int32)
+                           .Value = request.Page;
 
                         // OUTPUT PARAMETERS
 

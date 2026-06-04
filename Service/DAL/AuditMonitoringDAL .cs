@@ -14,40 +14,6 @@ namespace CallAuditPortal1.Service.DAL
         {
             _configuration = configuration;
         }
-        public async Task<List<AuditMonitoringModel>> SearchAuditData(AuditSearchRequest request)
-        {
-            List<AuditMonitoringModel> data = new List<AuditMonitoringModel>();
-            using (OracleConnection con = new OracleConnection(_configuration.GetConnectionString("DefaultConnection")))
-            {
-                await con.OpenAsync();
-                string query = @" ";
-
-                using (OracleCommand cmd = new OracleCommand(query, con))
-                {
-                    cmd.BindByName = true;
-                    cmd.Parameters.Add("STATUS", OracleDbType.Varchar2).Value = request.Status;
-                    cmd.Parameters.Add("AUDIT_TYPE", OracleDbType.Varchar2).Value = request.AuditType;
-                    cmd.Parameters.Add("FROM_DATE", OracleDbType.Varchar2).Value = request.FromDate;
-                    cmd.Parameters.Add("TO_DATE", OracleDbType.Varchar2).Value = request.ToDate;
-                    OracleDataReader reader = await cmd.ExecuteReaderAsync();
-                    while (
-                        await reader.ReadAsync())
-
-                    {
-                        data.Add(new AuditMonitoringModel
-                        {
-                                Id = Convert.ToInt32(reader["ID"]),
-                            ClaimNo = reader["CLAIM_NO"].ToString(),
-                            Status = reader["STATUS"].ToString(),
-                            AuditType = reader["AUDIT_TYPE"].ToString(),
-                            AuditDate = reader["AUDIT_DATE"].ToString(),
-                            Email = reader["ECG_LGC_EMAIL"].ToString()
-                        });
-                    }
-                }
-            }
-            return data;
-        }
         public async Task<string> SubmitToBranch(SubmitBranchRequest request)
         {
             using (OracleConnection con = new OracleConnection(_configuration.GetConnectionString("DefaultConnection")))

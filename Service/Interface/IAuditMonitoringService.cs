@@ -5,8 +5,6 @@ namespace CallAuditPortal1.Service.Interface
 {
     public interface IAuditMonitoringService
     {
-        Task<List<AuditMonitoringModel>> SearchAuditData(AuditSearchRequest request);
-
         Task<string> SubmitToBranch(SubmitBranchRequest request);
 
         Task<string> Download(DownloadRequest request);
