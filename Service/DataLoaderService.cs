@@ -1,7 +1,10 @@
 using CallAuditPortal1.Model.RequestDTO;
+using CallAuditPortal1.Model.ResponseDTO;
 using CallAuditPortal1.Service.Interface;
+using DocumentFormat.OpenXml.Office.Word;
 using OfficeOpenXml;
 using Oracle.ManagedDataAccess.Client;
+using Oracle.ManagedDataAccess.Types;
 using System.Data;
 using System.Dynamic;
 
@@ -55,9 +58,18 @@ namespace CallAuditPortal1.Service
                         await con.OpenAsync();
                         await cmd.ExecuteNonQueryAsync();
                         string status = statusParam.Value?.ToString();
-                        string inserted = insertedParam.Value?.ToString();
-                        string updated = updatedParam.Value?.ToString();
-                        string errors = errorParam.Value?.ToString();
+                        int inserted = Convert.ToInt32(insertedParam.Value.ToString());
+                        int updated = Convert.ToInt32(updatedParam.Value?.ToString());
+                        int errors = Convert.ToInt32(errorParam.Value?.ToString());
+                        var response = new UploadResponse
+                        {
+                            Status = status,
+                            Inserted = inserted,
+                            Updated = updated,
+                            Error = errors,
+                            Message = errors > 0 ? "File Uploaded with error" : "File Uploaded Successfully"
+
+                        };
                         return
                             $"Status : {status}\n" +
                             $"Inserted : {inserted}\n" +
@@ -72,7 +84,7 @@ namespace CallAuditPortal1.Service
             }
         }
 
-        public async Task<string> InsertDataIntoTempTable(string fullPath, string auditType, string auditDate)
+        public async Task<(string result, string session_Id)> InsertDataIntoTempTable(string fullPath, string auditType, string auditDate)
         {
             try
             {
@@ -85,7 +97,7 @@ namespace CallAuditPortal1.Service
                     using (OracleCommand cmd = new OracleCommand(query, con))
                     {
                         sessionId = Convert.ToString(await cmd.ExecuteScalarAsync());
-
+                        string sessionid = sessionId;
                     }
 
                     ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
@@ -94,11 +106,11 @@ namespace CallAuditPortal1.Service
                         ExcelWorksheet worksheet = package.Workbook.Worksheets[0];
                         if (worksheet == null)
                         {
-                            return "Worksheet not found.";
+                            return ("Worksheet not found.", "");
                         }
                         if (worksheet.Dimension == null)
                         {
-                            return "Excel sheet is empty.";
+                            return ("Excel sheet is empty.", "");
                         }
                         int rowCount = worksheet.Dimension.Rows;
                         int colCount = Math.Min(worksheet.Dimension.Columns, 148);
@@ -180,118 +192,266 @@ namespace CallAuditPortal1.Service
                     //    $"Data inserted successfully. Session ID : {sessionId}";
                     if (!string.IsNullOrEmpty(uploadProcess))
                     {
-                        return uploadProcess;
+                        return (uploadProcess, sessionId);
                     }
                     else
                     {
                         return
-                            $"Data inserted successfully. Session ID : {sessionId}";
+                            ($"Data inserted successfully. Session ID : {sessionId}", "");
                     }
                 }
             }
             catch (Exception ex)
             {
-                return $"Error while inserting data : {ex.Message}";
+                return ($"Error while inserting data : {ex.Message}", "");
             }
         }
-
-        public async Task<List<dynamic>> VerifyUpload(string sessionId,string templateId)
+        public async Task<List<dynamic>> VerifyUpload(string sessionId, string templateId)
         {
             List<dynamic> data = new List<dynamic>();
 
-            using (OracleConnection con = new OracleConnection(
-                    _configuration.GetConnectionString("DefaultConnection")))
+            try
             {
-                await con.OpenAsync();
-
-                string query = @"";
-
-                using (OracleCommand cmd =
-                       new OracleCommand(query, con))
+                using (OracleConnection con =
+                       new OracleConnection(_configuration.GetConnectionString("DefaultConnection")))
                 {
-                    cmd.Parameters.Add("sessionId",
-                        OracleDbType.Varchar2).Value = sessionId;
+                    await con.OpenAsync();
 
-                    cmd.Parameters.Add("templateId",
-                        OracleDbType.Varchar2).Value = templateId;
-
-                    using (OracleDataReader reader =
-                           await cmd.ExecuteReaderAsync())
+                    using (OracleCommand cmd =
+                           new OracleCommand("report_pkg.get_audit_data", con))
                     {
-                        while (await reader.ReadAsync())
+                        cmd.CommandType = CommandType.StoredProcedure;
+
+                        // INPUT PARAMETERS
+
+                        cmd.Parameters.Add("p_session_id", OracleDbType.Varchar2)
+                           .Value = sessionId;
+
+                        cmd.Parameters.Add("p_audit_status", OracleDbType.Varchar2)
+                           .Value = DBNull.Value;
+
+                        cmd.Parameters.Add("p_audit_type_id", OracleDbType.Int32)
+                           .Value = Convert.ToInt32(templateId);
+
+                        cmd.Parameters.Add("p_screen_type", OracleDbType.Varchar2)
+                           .Value = "VERIFY";
+
+                        cmd.Parameters.Add("p_from_date", OracleDbType.Varchar2)
+                           .Value = DBNull.Value;
+
+                        cmd.Parameters.Add("p_to_date", OracleDbType.Varchar2)
+                           .Value = DBNull.Value;
+
+                        // OUTPUT PARAMETERS
+
+                        cmd.Parameters.Add("p_err", OracleDbType.Varchar2, 4000)
+                           .Direction = ParameterDirection.Output;
+
+                        cmd.Parameters.Add("p_count", OracleDbType.Int32)
+                           .Direction = ParameterDirection.Output;
+
+                        cmd.Parameters.Add("p_result", OracleDbType.RefCursor)
+                           .Direction = ParameterDirection.Output;
+
+                        await cmd.ExecuteNonQueryAsync();
+
+                        // READ REF CURSOR
+
+                        OracleRefCursor refCursor =
+                            (OracleRefCursor)cmd.Parameters["p_result"].Value;
+
+                        using (OracleDataReader reader = refCursor.GetDataReader())
                         {
-                            var row = new ExpandoObject()
-                                      as IDictionary<string, object>;
-
-                            for (int i = 0; i < reader.FieldCount; i++)
+                            while (await reader.ReadAsync())
                             {
-                                row.Add(
-                                    reader.GetName(i),
-                                    reader.IsDBNull(i)
-                                    ? null
-                                    : reader.GetValue(i));
-                            }
+                                var row = new ExpandoObject() as IDictionary<string, object>;
 
-                            data.Add(row);
+                                for (int i = 0; i < reader.FieldCount; i++)
+                                {
+                                    row.Add(
+                                        reader.GetName(i),
+                                        reader.IsDBNull(i)
+                                            ? null
+                                            : reader.GetValue(i)
+                                    );
+                                }
+
+                                data.Add(row);
+                            }
                         }
+
+                        string errMsg =
+                            cmd.Parameters["p_err"].Value?.ToString();
+
+                        string count =
+                            cmd.Parameters["p_count"].Value?.ToString();
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(
+                    "Error in VerifyUpload : " + ex.Message +
+                    " | Inner Exception : " + ex.InnerException?.Message
+                );
             }
 
             return data;
         }
 
 
+      
         public async Task<string> SaveStatus(SaveStatusRequest request)
         {
             using (OracleConnection con = new OracleConnection(
-                    _configuration.GetConnectionString("DefaultConnection")))
+                   _configuration.GetConnectionString("DefaultConnection")))
             {
                 await con.OpenAsync();
 
-                string query = @"";
-
                 using (OracleCommand cmd =
-                       new OracleCommand(query, con))
+                       new OracleCommand(" excel_pkg.verify_reject_uploaded_data", con))
                 {
-                    cmd.Parameters.Add("statue",
-                        OracleDbType.Varchar2).Value = request.Status;
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    string receiptNos = string.Join(",", request.SelectedIds);
+                    cmd.Parameters.Add(
+                        "p_session_id",
+                        OracleDbType.Varchar2
+                    ).Value = request.SessionId;
+                    cmd.Parameters.Add(
+                        "p_audit_type_id",
+                        OracleDbType.Int32
+                    ).Value = request.AuditTypeId;
 
-                    cmd.Parameters.Add("targetedIds",
-                        OracleDbType.Varchar2).Value = request.SelectedIds.ToString();
-                    await cmd.ExecuteReaderAsync();
+                    cmd.Parameters.Add(
+                        "p_status",
+                        OracleDbType.Varchar2
+                    ).Value = request.Status;
 
-                    return "";
+                    cmd.Parameters.Add(
+                        "p_gsfs_receipt_nos",
+                        OracleDbType.Varchar2
+                    ).Value = receiptNos;
 
-                    
+                    // OUTPUT PARAMETER
+                    cmd.Parameters.Add(
+                        "p_msg",
+                        OracleDbType.Varchar2,
+                        4000
+                    ).Direction = ParameterDirection.Output;
+
+                    await cmd.ExecuteNonQueryAsync();
+
+                    return cmd.Parameters["p_msg"].Value?.ToString();
                 }
             }
-            
         }
 
+
+
+        //public async Task<string> RejectStatus(RejectUploadedDataRequest request)
+        //{
+        //    using (OracleConnection con = new OracleConnection(
+        //            _configuration.GetConnectionString("DefaultConnection")))
+        //    {
+        //            await con.OpenAsync();
+        //        using (OracleCommand cmd =
+        //               new OracleCommand("excel_pkg.verify_reject_uploaded_data", con))
+        //        {
+        //            cmd.CommandType =
+        //                CommandType.StoredProcedure;
+
+        //            // Procedure Parameters
+        //            cmd.Parameters.Add(
+        //                "p_message",
+        //                OracleDbType.Varchar2
+        //            ).Value = request.Reason;
+
+        //            cmd.Parameters.Add(
+        //                "p_ids",
+        //                OracleDbType.Varchar2
+        //            ).Value =
+        //                string.Join(",", request.SelectedIds);
+
+
+        //            await cmd.ExecuteNonQueryAsync();
+        //        }
+
+        //        string query = @"SELECT COUNT(*) FROM CSNET_PLUS_INTERFACE_ALL
+        //    WHERE ATTRIBUTE1 = :sessionId
+        //      AND ATTRIBUTE2 = :templateId";
+        //                return "Rejected successfully.";
+
+        //        }
+
+
+        //    }
+     
         public async Task<string> RejectStatus(RejectUploadedDataRequest request)
         {
-            using (OracleConnection con = new OracleConnection(
-                    _configuration.GetConnectionString("DefaultConnection")))
+            try
             {
-                await con.OpenAsync();
-
-                string query = @"";
-
-                using (OracleCommand cmd =
-                       new OracleCommand(query, con))
+                // Validation
+                if (string.IsNullOrWhiteSpace(request.Reason))
                 {
-                    cmd.Parameters.Add("message",
-                        OracleDbType.Varchar2).Value = request.Reason;
-
-                    cmd.Parameters.Add("ids",
-                        OracleDbType.Varchar2).Value = request.SelectedIds.ToString();
-
-                    return "";
-                    
+                    return "Please provide reason to reject.";
                 }
+
+                using (OracleConnection con = new OracleConnection(
+                       _configuration.GetConnectionString("DefaultConnection")))
+                {
+                    await con.OpenAsync();
+
+                    using (OracleCommand cmd =
+                           new OracleCommand("excel_pkg.verify_reject_uploaded_data", con))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+
+                        // Convert List to comma separated string
+                        string receiptNos = string.Join(",", request.SelectedIds);
+
+                        // INPUT PARAMETERS
+                        cmd.Parameters.Add(
+                            "p_session_id",
+                            OracleDbType.Varchar2
+                        ).Value = request.SessionId;
+
+                        cmd.Parameters.Add(
+                            "p_audit_type_id",
+                            OracleDbType.Int32
+                        ).Value = request.AuditTypeId;
+
+                        cmd.Parameters.Add(
+                            "p_status",
+                            OracleDbType.Varchar2
+                        ).Value = request.Status;
+
+                        cmd.Parameters.Add(
+                            "p_gsfs_receipt_nos",
+                            OracleDbType.Varchar2
+                        ).Value = receiptNos;
+
+                        // OUTPUT PARAMETER
+                        cmd.Parameters.Add(
+                            "p_msg",
+                            OracleDbType.Varchar2,
+                            4000
+                        ).Direction = ParameterDirection.Output;
+
+                        await cmd.ExecuteNonQueryAsync();
+
+                        return cmd.Parameters["p_msg"].Value?.ToString();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
             }
         }
 
+
+
+
     }
+
 }
