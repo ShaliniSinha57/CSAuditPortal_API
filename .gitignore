@@ -56,3 +56,5 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+/.vs/CallAuditPortal1.slnx/v18/DocumentLayout.backup.json
+/.vs/CallAuditPortal1.slnx/v18/DocumentLayout.json
