@@ -1,12 +1,71 @@
 {
   "Version": 1,
   "WorkspaceRootPath": "C:\\Work\\git\\CSAuditPortal_API\\",
-  "Documents": [],
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{D20105E4-B119-63C5-A115-7A8DE0359FE7}|CallAuditPortal1.csproj|c:\\work\\git\\csauditportal_api\\controllers\\auditcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D20105E4-B119-63C5-A115-7A8DE0359FE7}|CallAuditPortal1.csproj|solutionrelative:controllers\\auditcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D20105E4-B119-63C5-A115-7A8DE0359FE7}|CallAuditPortal1.csproj|c:\\work\\git\\csauditportal_api\\service\\dataloaderservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D20105E4-B119-63C5-A115-7A8DE0359FE7}|CallAuditPortal1.csproj|solutionrelative:service\\dataloaderservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D20105E4-B119-63C5-A115-7A8DE0359FE7}|CallAuditPortal1.csproj|c:\\work\\git\\csauditportal_api\\model\\requestdto\\auditclaimrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D20105E4-B119-63C5-A115-7A8DE0359FE7}|CallAuditPortal1.csproj|solutionrelative:model\\requestdto\\auditclaimrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
       "VerticalTabListWidth": 256,
-      "DocumentGroups": []
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "AuditController.cs",
+              "DocumentMoniker": "C:\\Work\\git\\CSAuditPortal_API\\Controllers\\AuditController.cs",
+              "RelativeDocumentMoniker": "Controllers\\AuditController.cs",
+              "ToolTip": "C:\\Work\\git\\CSAuditPortal_API\\Controllers\\AuditController.cs",
+              "RelativeToolTip": "Controllers\\AuditController.cs",
+              "ViewState": "AgIAAFwAAAAAAAAAAAAhwGgAAAAMAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-03T09:51:10.019Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "AuditClaimRequest.cs",
+              "DocumentMoniker": "C:\\Work\\git\\CSAuditPortal_API\\Model\\RequestDTO\\AuditClaimRequest.cs",
+              "RelativeDocumentMoniker": "Model\\RequestDTO\\AuditClaimRequest.cs",
+              "ToolTip": "C:\\Work\\git\\CSAuditPortal_API\\Model\\RequestDTO\\AuditClaimRequest.cs",
+              "RelativeToolTip": "Model\\RequestDTO\\AuditClaimRequest.cs",
+              "ViewState": "AgIAABkAAAAAAAAAAAAAABsAAAAIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-03T09:10:38.211Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "DataLoaderService.cs",
+              "DocumentMoniker": "C:\\Work\\git\\CSAuditPortal_API\\Service\\DataLoaderService.cs",
+              "RelativeDocumentMoniker": "Service\\DataLoaderService.cs",
+              "ToolTip": "C:\\Work\\git\\CSAuditPortal_API\\Service\\DataLoaderService.cs",
+              "RelativeToolTip": "Service\\DataLoaderService.cs",
+              "ViewState": "AgIAALgBAAAAAAAAAAAlwMEBAAAIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-01T03:35:31.817Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
     }
   ]
 }

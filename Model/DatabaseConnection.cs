@@ -54,7 +54,6 @@ namespace CallAuditPortal1.Model
     public DataTable getDataTableStoredProc(string procName, OracleParameter[] parameters)
     {
       using (OracleConnection conn = new OracleConnection(_configuration.GetConnectionString("DefaultConnection")))
-      //using (OracleConnection conn = new OracleConnection(_configuration.GetConnectionString("OracleConnection")))
       using (OracleCommand cmd = new OracleCommand(procName, conn))
       using (OracleDataAdapter da = new OracleDataAdapter(cmd))
       {
