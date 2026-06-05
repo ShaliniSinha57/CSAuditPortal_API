@@ -27,6 +27,7 @@
     public class DownloadRequest
     {
         public List<int> Ids { get; set; }
+        public int AuditId { get; set; }
     }
 
     public class RejectRequest

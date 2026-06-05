@@ -234,17 +234,19 @@ namespace CallAuditPortal1.Service
                            .Value = request.AuditTypeId;
                        
                         cmd.Parameters.Add("p_screen_type", OracleDbType.Varchar2)
-                           .Value = string.IsNullOrWhiteSpace(request.SessionId)? "SUBMIT" : "VERIFY";
+                           .Value = string.IsNullOrWhiteSpace(request.SessionId) ? "SUBMIT" : "VERIFY";
 
                         cmd.Parameters.Add("p_from_date", OracleDbType.Varchar2)
                            .Value = request.FromDate;
 
                         cmd.Parameters.Add("p_to_date", OracleDbType.Varchar2)
                            .Value = request.ToDate;
-                        cmd.Parameters.Add("p_pageSize", OracleDbType.Int32)
-                           .Value = request.Limit;
+
                         cmd.Parameters.Add("p_pageIndex", OracleDbType.Int32)
                            .Value = request.Page;
+
+                        cmd.Parameters.Add("p_pageSize", OracleDbType.Int32)
+                           .Value = request.Limit;
 
                         // OUTPUT PARAMETERS
 
@@ -300,7 +302,7 @@ namespace CallAuditPortal1.Service
                 );
             }
 
-            return data;
+            return data;    
         }
 
 
@@ -319,7 +321,7 @@ namespace CallAuditPortal1.Service
                     string receiptNos = string.Join(",", request.SelectedIds);
                     cmd.Parameters.Add("p_session_id",OracleDbType.Varchar2).Value = request.SessionId;
                     cmd.Parameters.Add("p_audit_type_id",OracleDbType.Int32).Value = request.AuditTypeId;
-                    cmd.Parameters.Add("p_status",OracleDbType.Varchar2).Value = request.Status;
+                    cmd.Parameters.Add("p_status",OracleDbType.Varchar2).Value = "PENDING";
                     cmd.Parameters.Add("p_gsfs_receipt_nos",OracleDbType.Varchar2).Value = receiptNos;
                     cmd.Parameters.Add("p_msg",OracleDbType.Varchar2,4000).Direction = ParameterDirection.Output;
                     await cmd.ExecuteNonQueryAsync();
@@ -327,47 +329,6 @@ namespace CallAuditPortal1.Service
                 }
             }
         }
-
-
-
-        //public async Task<string> RejectStatus(RejectUploadedDataRequest request)
-        //{
-        //    using (OracleConnection con = new OracleConnection(
-        //            _configuration.GetConnectionString("DefaultConnection")))
-        //    {
-        //            await con.OpenAsync();
-        //        using (OracleCommand cmd =
-        //               new OracleCommand("excel_pkg.verify_reject_uploaded_data", con))
-        //        {
-        //            cmd.CommandType =
-        //                CommandType.StoredProcedure;
-
-        //            // Procedure Parameters
-        //            cmd.Parameters.Add(
-        //                "p_message",
-        //                OracleDbType.Varchar2
-        //            ).Value = request.Reason;
-
-        //            cmd.Parameters.Add(
-        //                "p_ids",
-        //                OracleDbType.Varchar2
-        //            ).Value =
-        //                string.Join(",", request.SelectedIds);
-
-
-        //            await cmd.ExecuteNonQueryAsync();
-        //        }
-
-        //        string query = @"SELECT COUNT(*) FROM CSNET_PLUS_INTERFACE_ALL
-        //    WHERE ATTRIBUTE1 = :sessionId
-        //      AND ATTRIBUTE2 = :templateId";
-        //                return "Rejected successfully.";
-
-        //        }
-
-
-        //    }
-     
         public async Task<string> RejectStatus(RejectUploadedDataRequest request)
         {
             try
@@ -405,7 +366,7 @@ namespace CallAuditPortal1.Service
                         cmd.Parameters.Add(
                             "p_status",
                             OracleDbType.Varchar2
-                        ).Value = request.Status;
+                        ).Value = "REJECTED";
 
                         cmd.Parameters.Add(
                             "p_gsfs_receipt_nos",

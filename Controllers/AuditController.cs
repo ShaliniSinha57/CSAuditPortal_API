@@ -85,22 +85,37 @@ namespace CallAuditPortal1.Controllers
         [HttpPost("save-status")]
         public async Task<IActionResult> SaveStatus([FromBody] SaveStatusRequest request)
         {
-            var result = await _service.SaveStatus(request);
-            return Ok(new 
+            try
             {
-                message = "Data Saved Successfully"
-            });
+                var result = await _service.SaveStatus(request);
+                return Ok(new
+                {
+                    message = "Data Saved Successfully"
+                });
+            }
+            catch(Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+            
         }
 
         [HttpPost("reject-status")]
         public async Task<IActionResult> RejectStatus([FromBody] RejectUploadedDataRequest request)
         {
-            var result = await _service.RejectStatus(request);
-            return Ok(new 
-            { 
-                message = "File Rejected Successfully"
+            try
+            {
+                var result = await _service.RejectStatus(request);
+                return Ok(new
+                {
+                    message = "File Rejected Successfully"
+                }
+                );
             }
-            );
+           catch(Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
 
 
