@@ -23,6 +23,7 @@ builder.Services.AddTransient<AuditBAL>();
 builder.Services.AddTransient<AuditDAL>();
 builder.Services.AddScoped<IDataLoaderService, DataLoaderService>();
 builder.Services.AddScoped<IAuditMonitoringDAL, AuditMonitoringDAL>();
+builder.Services.AddScoped<IAuditMonitoringService, AuditMonitoringService>();
 
 
 builder.Services.AddDbContext<DbContext>(options =>

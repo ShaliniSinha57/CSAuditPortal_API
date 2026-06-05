@@ -3,16 +3,32 @@
   "WorkspaceRootPath": "C:\\Work\\git\\CSAuditPortal_API\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{D20105E4-B119-63C5-A115-7A8DE0359FE7}|CallAuditPortal1.csproj|c:\\work\\git\\csauditportal_api\\controllers\\auditcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{D20105E4-B119-63C5-A115-7A8DE0359FE7}|CallAuditPortal1.csproj|solutionrelative:controllers\\auditcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{D20105E4-B119-63C5-A115-7A8DE0359FE7}|CallAuditPortal1.csproj|c:\\work\\git\\csauditportal_api\\service\\dal\\auditmonitoringdal .cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D20105E4-B119-63C5-A115-7A8DE0359FE7}|CallAuditPortal1.csproj|solutionrelative:service\\dal\\auditmonitoringdal .cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{D20105E4-B119-63C5-A115-7A8DE0359FE7}|CallAuditPortal1.csproj|c:\\work\\git\\csauditportal_api\\service\\dataloaderservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{D20105E4-B119-63C5-A115-7A8DE0359FE7}|CallAuditPortal1.csproj|solutionrelative:service\\dataloaderservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{D20105E4-B119-63C5-A115-7A8DE0359FE7}|CallAuditPortal1.csproj|c:\\work\\git\\csauditportal_api\\service\\interface\\iauditmonitoringdal.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D20105E4-B119-63C5-A115-7A8DE0359FE7}|CallAuditPortal1.csproj|solutionrelative:service\\interface\\iauditmonitoringdal.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{D20105E4-B119-63C5-A115-7A8DE0359FE7}|CallAuditPortal1.csproj|c:\\work\\git\\csauditportal_api\\model\\requestdto\\auditclaimrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{D20105E4-B119-63C5-A115-7A8DE0359FE7}|CallAuditPortal1.csproj|solutionrelative:model\\requestdto\\auditclaimrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{D20105E4-B119-63C5-A115-7A8DE0359FE7}|CallAuditPortal1.csproj|c:\\work\\git\\csauditportal_api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{D20105E4-B119-63C5-A115-7A8DE0359FE7}|CallAuditPortal1.csproj|solutionrelative:appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D20105E4-B119-63C5-A115-7A8DE0359FE7}|CallAuditPortal1.csproj|c:\\work\\git\\csauditportal_api\\service\\interface\\iauditmonitoringservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D20105E4-B119-63C5-A115-7A8DE0359FE7}|CallAuditPortal1.csproj|solutionrelative:service\\interface\\iauditmonitoringservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D20105E4-B119-63C5-A115-7A8DE0359FE7}|CallAuditPortal1.csproj|c:\\work\\git\\csauditportal_api\\controllers\\auditmonitoringcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D20105E4-B119-63C5-A115-7A8DE0359FE7}|CallAuditPortal1.csproj|solutionrelative:controllers\\auditmonitoringcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D20105E4-B119-63C5-A115-7A8DE0359FE7}|CallAuditPortal1.csproj|c:\\work\\git\\csauditportal_api\\model\\requestdto\\auditsearchrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D20105E4-B119-63C5-A115-7A8DE0359FE7}|CallAuditPortal1.csproj|solutionrelative:model\\requestdto\\auditsearchrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D20105E4-B119-63C5-A115-7A8DE0359FE7}|CallAuditPortal1.csproj|c:\\work\\git\\csauditportal_api\\service\\auditmonitoringservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D20105E4-B119-63C5-A115-7A8DE0359FE7}|CallAuditPortal1.csproj|solutionrelative:service\\auditmonitoringservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -22,46 +38,94 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 5,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "AuditController.cs",
-              "DocumentMoniker": "C:\\Work\\git\\CSAuditPortal_API\\Controllers\\AuditController.cs",
-              "RelativeDocumentMoniker": "Controllers\\AuditController.cs",
-              "ToolTip": "C:\\Work\\git\\CSAuditPortal_API\\Controllers\\AuditController.cs",
-              "RelativeToolTip": "Controllers\\AuditController.cs",
-              "ViewState": "AgIAAFwAAAAAAAAAAAAhwGgAAAAMAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-03T09:51:10.019Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
               "DocumentIndex": 2,
-              "Title": "AuditClaimRequest.cs",
-              "DocumentMoniker": "C:\\Work\\git\\CSAuditPortal_API\\Model\\RequestDTO\\AuditClaimRequest.cs",
-              "RelativeDocumentMoniker": "Model\\RequestDTO\\AuditClaimRequest.cs",
-              "ToolTip": "C:\\Work\\git\\CSAuditPortal_API\\Model\\RequestDTO\\AuditClaimRequest.cs",
-              "RelativeToolTip": "Model\\RequestDTO\\AuditClaimRequest.cs",
-              "ViewState": "AgIAABkAAAAAAAAAAAAAABsAAAAIAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-03T09:10:38.211Z",
+              "Title": "appsettings.json",
+              "DocumentMoniker": "C:\\Work\\git\\CSAuditPortal_API\\appsettings.json",
+              "RelativeDocumentMoniker": "appsettings.json",
+              "ToolTip": "C:\\Work\\git\\CSAuditPortal_API\\appsettings.json",
+              "RelativeToolTip": "appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAACAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-06-05T08:35:31.882Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "DataLoaderService.cs",
-              "DocumentMoniker": "C:\\Work\\git\\CSAuditPortal_API\\Service\\DataLoaderService.cs",
-              "RelativeDocumentMoniker": "Service\\DataLoaderService.cs",
-              "ToolTip": "C:\\Work\\git\\CSAuditPortal_API\\Service\\DataLoaderService.cs",
-              "RelativeToolTip": "Service\\DataLoaderService.cs",
-              "ViewState": "AgIAALgBAAAAAAAAAAAlwMEBAAAIAAAAAAAAAA==",
+              "Title": "IAuditMonitoringDAL.cs",
+              "DocumentMoniker": "C:\\Work\\git\\CSAuditPortal_API\\Service\\Interface\\IAuditMonitoringDAL.cs",
+              "RelativeDocumentMoniker": "Service\\Interface\\IAuditMonitoringDAL.cs",
+              "ToolTip": "C:\\Work\\git\\CSAuditPortal_API\\Service\\Interface\\IAuditMonitoringDAL.cs",
+              "RelativeToolTip": "Service\\Interface\\IAuditMonitoringDAL.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAAsAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-01T03:35:31.817Z",
+              "WhenOpened": "2026-06-05T06:30:05.986Z",
               "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "IAuditMonitoringService.cs",
+              "DocumentMoniker": "C:\\Work\\git\\CSAuditPortal_API\\Service\\Interface\\IAuditMonitoringService.cs",
+              "RelativeDocumentMoniker": "Service\\Interface\\IAuditMonitoringService.cs",
+              "ToolTip": "C:\\Work\\git\\CSAuditPortal_API\\Service\\Interface\\IAuditMonitoringService.cs",
+              "RelativeToolTip": "Service\\Interface\\IAuditMonitoringService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAGAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-05T05:47:02.522Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "AuditMonitoringController.cs",
+              "DocumentMoniker": "C:\\Work\\git\\CSAuditPortal_API\\Controllers\\AuditMonitoringController.cs",
+              "RelativeDocumentMoniker": "Controllers\\AuditMonitoringController.cs",
+              "ToolTip": "C:\\Work\\git\\CSAuditPortal_API\\Controllers\\AuditMonitoringController.cs",
+              "RelativeToolTip": "Controllers\\AuditMonitoringController.cs",
+              "ViewState": "AgIAABsAAAAAAAAAAAAAACEAAAAHAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-04T09:50:29.35Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "AuditSearchRequest.cs",
+              "DocumentMoniker": "C:\\Work\\git\\CSAuditPortal_API\\Model\\RequestDTO\\AuditSearchRequest.cs",
+              "RelativeDocumentMoniker": "Model\\RequestDTO\\AuditSearchRequest.cs",
+              "ToolTip": "C:\\Work\\git\\CSAuditPortal_API\\Model\\RequestDTO\\AuditSearchRequest.cs",
+              "RelativeToolTip": "Model\\RequestDTO\\AuditSearchRequest.cs",
+              "ViewState": "AgIAAAgAAAAAAAAAAAAAAAsAAAAuAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-04T09:32:24.209Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "AuditMonitoringDAL .cs",
+              "DocumentMoniker": "C:\\Work\\git\\CSAuditPortal_API\\Service\\DAL\\AuditMonitoringDAL .cs",
+              "RelativeDocumentMoniker": "Service\\DAL\\AuditMonitoringDAL .cs",
+              "ToolTip": "C:\\Work\\git\\CSAuditPortal_API\\Service\\DAL\\AuditMonitoringDAL .cs",
+              "RelativeToolTip": "Service\\DAL\\AuditMonitoringDAL .cs",
+              "ViewState": "AgIAABgAAAAAAAAAAAAIwCAAAAAUAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-04T09:26:26.004Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "AuditMonitoringService.cs",
+              "DocumentMoniker": "C:\\Work\\git\\CSAuditPortal_API\\Service\\AuditMonitoringService.cs",
+              "RelativeDocumentMoniker": "Service\\AuditMonitoringService.cs",
+              "ToolTip": "C:\\Work\\git\\CSAuditPortal_API\\Service\\AuditMonitoringService.cs",
+              "RelativeToolTip": "Service\\AuditMonitoringService.cs",
+              "ViewState": "AgIAABAAAAAAAAAAAAAQwBkAAAALAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-04T09:26:01.722Z"
             }
           ]
         }
