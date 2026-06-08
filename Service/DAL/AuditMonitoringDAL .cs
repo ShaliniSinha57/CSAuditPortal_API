@@ -3,6 +3,7 @@ using CallAuditPortal1.Model.RequestDTO;
 using CallAuditPortal1.Service.Interface;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Oracle.ManagedDataAccess.Client;
+using System.Data;
 using System.Net;
 using System.Net.Mail;
 using static Microsoft.AspNetCore.Razor.Language.TagHelperMetadata;
@@ -184,21 +185,18 @@ namespace CallAuditPortal1.Service.DAL
 
         public async Task<string> Reject(RejectRequest request)
         {
-            using (OracleConnection con = new OracleConnection(_configuration.GetConnectionString("DefaultConnection")))
+            using OracleConnection con = new OracleConnection( _configuration.GetConnectionString("DefaultConnection"));
+            await con.OpenAsync();
+            foreach (var id in request.Ids)
             {
-                await con.OpenAsync();
-                string query = @"";
+                using OracleCommand cmd = new OracleCommand("report_pkg.submit_reject", con);
+                cmd.CommandType = CommandType.StoredProcedure;
 
-                using (OracleCommand cmd = new OracleCommand(query, con))
-                {
-                    cmd.Parameters.Add("ID", OracleDbType.Varchar2).Value = request.Ids.ToString();
-                    cmd.Parameters.Add("Reason", OracleDbType.Varchar2).Value = request.Reason;
-                    await cmd.ExecuteNonQueryAsync();
-
-                }
-
-                return "Rejected Successfully !";
+                cmd.Parameters.Add("p_id", OracleDbType.Int32).Value = id;
+                cmd.Parameters.Add("p_reason", OracleDbType.Varchar2).Value = request.Reason;
+                await cmd.ExecuteNonQueryAsync();
             }
+            return "Rejected Successfully!";
         }
     }
 }
