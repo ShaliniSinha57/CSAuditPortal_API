@@ -16,39 +16,6 @@ namespace CallAuditPortal1.Service.DAL
         {
             _configuration = configuration;
         }
-        public async Task<List<AuditMonitoringModel>> SearchAuditData(AuditSearchRequest request)
-        {
-            List<AuditMonitoringModel> data = new List<AuditMonitoringModel>();
-            using (OracleConnection con = new OracleConnection(_configuration.GetConnectionString("DefaultConnection")))
-            {
-                await con.OpenAsync();
-                using (OracleCommand cmd =
-                       new OracleCommand("report_pkg.get_audit_data", con))
-                {
-                    cmd.BindByName = true;
-                    cmd.Parameters.Add("STATUS", OracleDbType.Varchar2).Value = request.Status;
-                    cmd.Parameters.Add("AUDIT_TYPE", OracleDbType.Varchar2).Value = request.AuditType;
-                    cmd.Parameters.Add("FROM_DATE", OracleDbType.Varchar2).Value = request.FromDate;
-                    cmd.Parameters.Add("TO_DATE", OracleDbType.Varchar2).Value = request.ToDate;
-                    OracleDataReader reader = await cmd.ExecuteReaderAsync();
-                    while (
-                        await reader.ReadAsync())
-
-                    {
-                        data.Add(new AuditMonitoringModel
-                        {
-                                Id = Convert.ToInt32(reader["ID"]),
-                           
-                            Status = reader["STATUS"].ToString(),
-                            AuditType = reader["AUDIT_TYPE"].ToString(),
-                            AuditDate = reader["AUDIT_DATE"].ToString(),
-                            
-                        });
-                    }
-                }
-            }
-            return data;
-        }
         public async Task<string> SubmitToBranch(SubmitBranchRequest request)
         {
             using (OracleConnection con =
