@@ -210,7 +210,7 @@ namespace CallAuditPortal1.Service
                 return ($"Error while inserting data : {ex.Message}", "");
             }
         }
-        public async Task<List<dynamic>> SearchAuditData(AuditSearchRequest request)
+        public async Task<(int TotalData, List<dynamic>)> SearchAuditData(AuditSearchRequest request)
         {
             List<dynamic> data = new List<dynamic>();
 
@@ -248,7 +248,7 @@ namespace CallAuditPortal1.Service
                            .Value = request.ToDate;
 
                         cmd.Parameters.Add("p_pageIndex", OracleDbType.Int32)
-                           .Value = request.Page;
+                           .Value = request.Page != null ? request.Page-1 : request.Page;
 
                         cmd.Parameters.Add("p_pageSize", OracleDbType.Int32)
                            .Value = request.Limit;
@@ -287,7 +287,8 @@ namespace CallAuditPortal1.Service
                             }
                         }
                         string errMsg = cmd.Parameters["p_err"].Value?.ToString();
-                        string count = cmd.Parameters["p_count"].Value?.ToString();
+                        int count = Convert.ToInt32(cmd.Parameters["p_count"].Value?.ToString());
+                        return (count, data);
                     }
                 }
             }
@@ -298,8 +299,6 @@ namespace CallAuditPortal1.Service
                     " | Inner Exception : " + ex.InnerException?.Message
                 );
             }
-
-            return data;    
         }
         public async Task<string> SaveStatus(SaveStatusRequest request)
         {

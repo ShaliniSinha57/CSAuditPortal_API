@@ -72,7 +72,8 @@ namespace CallAuditPortal1.Controllers
                 return Ok(new
                 {
                     success = true,
-                    data = data
+                    totalRecords = data.Item1,
+                    data = data.Item2
                 });
             }
             catch (Exception ex)
