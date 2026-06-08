@@ -25,6 +25,11 @@ namespace CallAuditPortal1.Service
         {
             return await _auditMonitoringDAL.Reject(request);
         }
+
+        public async Task<byte[]> Download(DownloadRequest request)
+        {
+            return await _auditMonitoringDAL.Download(request);
+        }
     }
 
     

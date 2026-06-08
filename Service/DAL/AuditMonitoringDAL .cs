@@ -2,7 +2,10 @@
 using CallAuditPortal1.Model.RequestDTO;
 using CallAuditPortal1.Service.Interface;
 using DocumentFormat.OpenXml.Spreadsheet;
+using OfficeOpenXml;
 using Oracle.ManagedDataAccess.Client;
+using Oracle.ManagedDataAccess.Types;
+using System.Data;
 using System.Net;
 using System.Net.Mail;
 using static Microsoft.AspNetCore.Razor.Language.TagHelperMetadata;
@@ -154,18 +157,64 @@ namespace CallAuditPortal1.Service.DAL
             using (OracleConnection con = new OracleConnection(_configuration.GetConnectionString("DefaultConnection")))
             {
                 await con.OpenAsync();
-                string query = @"";
-
-                using (OracleCommand cmd = new OracleCommand(query, con))
+                using (OracleCommand cmd = new OracleCommand("report_pkg.submit_reject", con))
                 {
-                    cmd.Parameters.Add("ID", OracleDbType.Varchar2).Value = request.Ids.ToString();
-                    cmd.Parameters.Add("Reason", OracleDbType.Varchar2).Value = request.Reason;
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    string receiptNos = string.Join(",", request.GSFS_Receipt_Nos);
+                    cmd.Parameters.Add("p_audit_type_id", OracleDbType.Int32).Value = request.AuditTypeId;
+                    cmd.Parameters.Add("p_gsfs_receipt_nos", OracleDbType.Varchar2).Value = receiptNos;
+                    cmd.Parameters.Add("p_msg", OracleDbType.Varchar2, 500).Direction = ParameterDirection.Output;
                     await cmd.ExecuteNonQueryAsync();
-
+                    var message = cmd.Parameters["p_msg"].Value?.ToString();
+                    return message;
                 }
 
-                return "Rejected Successfully !";
             }
+        }
+
+        public async Task<byte[]> Download(DownloadRequest request)
+        {
+            using OracleConnection con = new OracleConnection(
+                _configuration.GetConnectionString("DefaultConnection"));
+            await con.OpenAsync();
+            using OracleCommand cmd = new OracleCommand("report_pkg.download_audit_data", con);
+            cmd.CommandType = CommandType.StoredProcedure;
+            string receiptNos = string.Join(",", request.GSFS_Receipt_Nos);
+            cmd.Parameters.Add("p_audit_type_id", OracleDbType.Int32).Value = request.AuditTypeId;
+            cmd.Parameters.Add("p_gsfs_receipt_nos", OracleDbType.Varchar2).Value = receiptNos;
+            cmd.Parameters.Add("p_result", OracleDbType.RefCursor).Direction = ParameterDirection.Output;
+            cmd.Parameters.Add("p_msg", OracleDbType.Varchar2, 500).Direction = ParameterDirection.Output;
+
+            await cmd.ExecuteNonQueryAsync();
+            var message = cmd.Parameters["p_msg"].Value?.ToString();
+            
+            OracleRefCursor cursor = (OracleRefCursor)cmd.Parameters["p_result"].Value;
+            using OracleDataReader reader = cursor.GetDataReader();
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+            using ExcelPackage package = new ExcelPackage();
+            var worksheet = package.Workbook.Worksheets.Add("Audit Report");
+            int row = 1;
+            for (int col = 0; col < reader.FieldCount; col++)
+            {
+                worksheet.Cells[row, col + 1].Value =
+                    reader.GetName(col);
+                worksheet.Cells[row, col + 1]
+                         .Style.Font.Bold = true;
+            }
+            row++;
+            while (await reader.ReadAsync())
+            {
+                for (int col = 0; col < reader.FieldCount; col++)
+                {
+                    worksheet.Cells[row, col + 1].Value =
+                        reader.IsDBNull(col)
+                            ? ""
+                            : reader.GetValue(col);
+                }
+                row++;
+            }
+            worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
+            return package.GetAsByteArray();
         }
     }
 }

@@ -9,5 +9,7 @@ namespace CallAuditPortal1.Service.Interface
 
         Task<string> Reject(RejectRequest request);
 
+        Task<byte[]> Download(DownloadRequest request);
+
     }
 }

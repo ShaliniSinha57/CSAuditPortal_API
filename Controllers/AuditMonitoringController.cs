@@ -30,10 +30,38 @@ namespace CallAuditPortal1.Controllers
         [HttpPost("Reject")]
         public async Task<IActionResult> Reject([FromBody] RejectRequest request)
         {
-            var result = await _auditMonitoringService.Reject(request);
-            return Ok(result);
+            try
+            {
+                var result = await _auditMonitoringService.Reject(request);
+                return Ok(new
+                {
+                    success = true,
+                    message = result
+                });
+            }catch(Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+            
         }
 
+        [HttpPost("Download")]
+        public async Task<IActionResult> Download([FromBody] DownloadRequest request)
+        {
+            try
+            {
+                var fileBytes =
+                    await _auditMonitoringService.Download(request);
+                return File(
+                    fileBytes,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    $"Audit_Report_{DateTime.Now:yyyyMMddHHmmss}.xlsx");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
 
     }
 

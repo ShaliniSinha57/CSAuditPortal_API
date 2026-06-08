@@ -43,8 +43,14 @@
 
     public class RejectRequest
     {
-        public string Reason { get; set; } = string.Empty;
-        public List<int> Ids { get; set; }
+        public int AuditTypeId { get; set; }
+        public List<string> GSFS_Receipt_Nos { get; set; }
+    }
+
+    public class DownloadRequest
+    {
+        public int AuditTypeId { get; set; }
+        public List<string> GSFS_Receipt_Nos { get; set; }
     }
 }
 

@@ -221,12 +221,13 @@ namespace CallAuditPortal1.Service
                 {
                     await con.OpenAsync();
 
+                    var screenType = string.IsNullOrWhiteSpace(request.SessionId)
+                 ? "SUBMIT"
+                 : "VERIFY";
                     using (OracleCommand cmd =
                            new OracleCommand("report_pkg.get_audit_data", con))
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
-
-                        // INPUT PARAMETERS
 
                         cmd.Parameters.Add("p_session_id", OracleDbType.Varchar2)
                            .Value = request.SessionId;
@@ -238,7 +239,7 @@ namespace CallAuditPortal1.Service
                            .Value = request.AuditTypeId;
                        
                         cmd.Parameters.Add("p_screen_type", OracleDbType.Varchar2)
-                           .Value = string.IsNullOrWhiteSpace(request.SessionId) ? "SUBMIT" : "VERIFY";
+                           .Value = screenType;
 
                         cmd.Parameters.Add("p_from_date", OracleDbType.Varchar2)
                            .Value = request.FromDate;
@@ -252,8 +253,6 @@ namespace CallAuditPortal1.Service
                         cmd.Parameters.Add("p_pageSize", OracleDbType.Int32)
                            .Value = request.Limit;
 
-                        // OUTPUT PARAMETERS
-
                         cmd.Parameters.Add("p_err", OracleDbType.Varchar2, 4000)
                            .Direction = ParameterDirection.Output;
 
@@ -265,15 +264,13 @@ namespace CallAuditPortal1.Service
 
                         await cmd.ExecuteNonQueryAsync();
 
-                        // READ REF CURSOR
-
-                        OracleRefCursor refCursor =
-                            (OracleRefCursor)cmd.Parameters["p_result"].Value;
-
+                        OracleRefCursor refCursor = (OracleRefCursor)cmd.Parameters["p_result"].Value;
+                       
                         using (OracleDataReader reader = refCursor.GetDataReader())
                         {
                             while (await reader.ReadAsync())
                             {
+                                Console.WriteLine("Row Found");
                                 var row = new ExpandoObject() as IDictionary<string, object>;
 
                                 for (int i = 0; i < reader.FieldCount; i++)
@@ -289,12 +286,8 @@ namespace CallAuditPortal1.Service
                                 data.Add(row);
                             }
                         }
-
-                        string errMsg =
-                            cmd.Parameters["p_err"].Value?.ToString();
-
-                        string count =
-                            cmd.Parameters["p_count"].Value?.ToString();
+                        string errMsg = cmd.Parameters["p_err"].Value?.ToString();
+                        string count = cmd.Parameters["p_count"].Value?.ToString();
                     }
                 }
             }
@@ -308,9 +301,6 @@ namespace CallAuditPortal1.Service
 
             return data;    
         }
-
-
-      
         public async Task<string> SaveStatus(SaveStatusRequest request)
         {
             using (OracleConnection con = new OracleConnection(
@@ -325,6 +315,7 @@ namespace CallAuditPortal1.Service
                     string receiptNos = string.Join(",", request.SelectedIds);
                     cmd.Parameters.Add("p_session_id",OracleDbType.Varchar2).Value = request.SessionId;
                     cmd.Parameters.Add("p_audit_type_id",OracleDbType.Int32).Value = request.AuditTypeId;
+                    cmd.Parameters.Add("p_remarks", OracleDbType.Varchar2).Value = null;
                     cmd.Parameters.Add("p_status",OracleDbType.Varchar2).Value = "PENDING";
                     cmd.Parameters.Add("p_gsfs_receipt_nos",OracleDbType.Varchar2).Value = receiptNos;
                     cmd.Parameters.Add("p_msg",OracleDbType.Varchar2,4000).Direction = ParameterDirection.Output;
@@ -368,6 +359,11 @@ namespace CallAuditPortal1.Service
                         ).Value = request.AuditTypeId;
 
                         cmd.Parameters.Add(
+                            "p_remarks",
+                            OracleDbType.Varchar2
+                        ).Value = request.Reason;
+
+                        cmd.Parameters.Add(
                             "p_status",
                             OracleDbType.Varchar2
                         ).Value = "REJECTED";
@@ -395,10 +391,6 @@ namespace CallAuditPortal1.Service
                 return ex.Message;
             }
         }
-
-
-
-
     }
 
 }
