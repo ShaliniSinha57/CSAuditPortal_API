@@ -29,18 +29,19 @@ namespace CallAuditPortal1.Service
                     new OracleConnection(connectionString))
                 {
                     using (OracleCommand cmd =
-                        new OracleCommand("csnet_plus_excel_pkg.csnet_plus_excel_upld_proc", con))
+                        new OracleCommand("excel_pkg.excel_upld_proc", con))
                     {
 
                         cmd.CommandType = CommandType.StoredProcedure;
                         DateTime parsedDate;
-                        if (!DateTime.TryParse(auditDate, out parsedDate))
+                        if (string.IsNullOrWhiteSpace(auditDate))
                         {
-                            return "Invalid audit date format.";
+                            return "Audit date is required.";
                         }
+
                         cmd.Parameters.Add("p_session", OracleDbType.Varchar2).Value = sessionId;
                         cmd.Parameters.Add("p_template_id", OracleDbType.Int32).Value = Convert.ToInt32(templateId);
-                        cmd.Parameters.Add("p_audit_date", OracleDbType.Date).Value = parsedDate;
+                        cmd.Parameters.Add("p_audit_date", OracleDbType.Varchar2).Value = auditDate.Trim();
                         cmd.Parameters.Add("p_user", OracleDbType.Varchar2).Value = userName;
                         OracleParameter statusParam = new OracleParameter("p_status", OracleDbType.Varchar2, 100);
                         statusParam.Direction = ParameterDirection.Output;
@@ -135,8 +136,11 @@ namespace CallAuditPortal1.Service
                                 insertCmd.Parameters.Add("CREATED_BY", OracleDbType.Varchar2).Value = "SYSTEM_USER";
                                 columns.Add("ATTRIBUTE104");
                                 values.Add(":AUDIT_DATE");
+
                                 DateTime parsedAuditDate = DateTime.Parse(auditDate);
-                                insertCmd.Parameters.Add("AUDIT_DATE", OracleDbType.Date).Value = parsedAuditDate;
+
+                                insertCmd.Parameters.Add("AUDIT_DATE", OracleDbType.Varchar2)
+                                         .Value = auditDate;
                                 int attributeIndex = 3;
 
                                 for (int col = 1; col <= colCount; col++)

@@ -6,7 +6,6 @@ namespace CallAuditPortal1.Service.Interface
     public interface IAuditMonitoringDAL
     {
         Task<string> SubmitToBranch(SubmitBranchRequest request);
-        Task<string> Download(DownloadRequest request);
         Task<string> Reject(RejectRequest request);
     }
 }

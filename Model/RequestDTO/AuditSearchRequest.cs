@@ -12,22 +12,33 @@
         public int? Limit { get; set; }
     }
 
-    public class SubmitBranchRequest
-    {
+        public class SubmitBranchRequest
+        {
         public int Id { get; set; }
 
-        public string ClaimNo { get; set; }
+        public string Status { get; set; }
 
         public string AuditType { get; set; }
 
-        public string Email { get; set; }
+        public List<int> SelectedIds { get; set; }
     }
 
 
-    public class DownloadRequest
+    public class Email
     {
-        public List<int> Ids { get; set; }
-        public int AuditId { get; set; }
+        public string To { get; set; }
+
+        public string CC { get; set; }
+
+        public string From { get; set; }
+
+        public string MailSubject { get; set; }
+
+        public string MailBody { get; set; }
+
+        public string AttachmentFileName { get; set; }
+
+        public List<string> Attachments { get; set; } = new();
     }
 
     public class RejectRequest
