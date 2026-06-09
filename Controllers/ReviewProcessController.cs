@@ -1,4 +1,5 @@
 ﻿using CallAuditPortal1.Model.RequestDTO;
+using CallAuditPortal1.Service.DAL;
 using CallAuditPortal1.Service.Interface;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,11 +17,12 @@ namespace CallAuditPortal1.Controllers
         }
 
         [HttpPost("Search")]
-        public async Task<IActionResult> Search([FromBody] ReviewProcessRequest request)
+        public async Task<IActionResult> Search([FromBody] ReviewProcessSearchRequest request)
         {
             var result = await _services.SearchReviewProcess(request);
             return Ok(result);
         }
+        
 
         [HttpPost("Download")]
         public async Task<IActionResult> Download([FromBody] DownloadReviewProcessRequest request)
