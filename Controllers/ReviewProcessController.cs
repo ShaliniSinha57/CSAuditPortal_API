@@ -16,10 +16,23 @@ namespace CallAuditPortal1.Controllers
         }
 
         [HttpPost("Search")]
-        public async Task<IActionResult> Search([FromBody] ReviewProcessRequest request)
+        public async Task<IActionResult> Search([FromBody] ReviewProcessSearchRequest request)
         {
-            var result = await _services.SearchReviewProcess(request);
-            return Ok(result);
+            try
+            {
+                var result = await _services.SearchReviewProcess(request);
+                return Ok(new
+                {
+                    success = true,
+                    totalData = result.Item1,
+                    data = result.Item2
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+            
         }
 
         [HttpPost("Download")]

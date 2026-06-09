@@ -5,7 +5,7 @@ namespace CallAuditPortal1.Service.Interface
 {
     public interface IReviewProcessDAL
     {
-        Task<List<ReviewProcessModel>> SearchReviewProcess(ReviewProcessRequest request);
-        Task<string> DownloadReviewProcess(DownloadReviewProcessRequest request);
+        Task<(int, List<dynamic>)> SearchReviewProcess(ReviewProcessSearchRequest request);
+        Task<byte[]> DownloadReviewProcess(DownloadReviewProcessRequest request);
     }
 }
