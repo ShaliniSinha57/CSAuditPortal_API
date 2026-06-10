@@ -307,7 +307,7 @@ namespace CallAuditPortal1.Service
                 await con.OpenAsync();
 
                 using (OracleCommand cmd =
-                       new OracleCommand("csnet_plus_excel_pkg.verify_reject_uploaded_data", con))
+                       new OracleCommand("excel_pkg.verify_reject_uploaded_data", con))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
                     string receiptNos = string.Join(",", request.SelectedIds);
