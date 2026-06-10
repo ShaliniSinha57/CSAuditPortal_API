@@ -13,7 +13,6 @@ namespace CallAuditPortal1.Service
     public class DataLoaderService : IDataLoaderService
     {
         private readonly IConfiguration _configuration;
-
         public DataLoaderService(IConfiguration configuration)
         {
             _configuration = configuration;
@@ -299,12 +298,8 @@ namespace CallAuditPortal1.Service
                     " | Inner Exception : " + ex.InnerException?.Message
                 );
             }
-
             return data;
         }
-
-
-      
         public async Task<string> SaveStatus(SaveStatusRequest request)
         {
             using (OracleConnection con = new OracleConnection(
@@ -350,46 +345,6 @@ namespace CallAuditPortal1.Service
             }
         }
 
-
-
-        //public async Task<string> RejectStatus(RejectUploadedDataRequest request)
-        //{
-        //    using (OracleConnection con = new OracleConnection(
-        //            _configuration.GetConnectionString("DefaultConnection")))
-        //    {
-        //            await con.OpenAsync();
-        //        using (OracleCommand cmd =
-        //               new OracleCommand("excel_pkg.verify_reject_uploaded_data", con))
-        //        {
-        //            cmd.CommandType =
-        //                CommandType.StoredProcedure;
-
-        //            // Procedure Parameters
-        //            cmd.Parameters.Add(
-        //                "p_message",
-        //                OracleDbType.Varchar2
-        //            ).Value = request.Reason;
-
-        //            cmd.Parameters.Add(
-        //                "p_ids",
-        //                OracleDbType.Varchar2
-        //            ).Value =
-        //                string.Join(",", request.SelectedIds);
-
-
-        //            await cmd.ExecuteNonQueryAsync();
-        //        }
-
-        //        string query = @"SELECT COUNT(*) FROM CSNET_PLUS_INTERFACE_ALL
-        //    WHERE ATTRIBUTE1 = :sessionId
-        //      AND ATTRIBUTE2 = :templateId";
-        //                return "Rejected successfully.";
-
-        //        }
-
-
-        //    }
-     
         public async Task<string> RejectStatus(RejectUploadedDataRequest request)
         {
             try
