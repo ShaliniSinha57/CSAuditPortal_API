@@ -73,33 +73,16 @@ namespace CallAuditPortal1.Service.DAL
                            new OracleCommand("report_pkg.GET_REVIEW_DATA", con))
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
-
-                        cmd.Parameters.Add("p_gsfs_reciept_no", OracleDbType.Varchar2)
-                           .Value = request.ReceiptNo;
-
-                        cmd.Parameters.Add("p_suspicious", OracleDbType.Varchar2)
-                           .Value = request.Suspicious;
-
-                        cmd.Parameters.Add("p_from_audit_date", OracleDbType.Varchar2)
-                           .Value = request.FromAuditDate;
-
-                        cmd.Parameters.Add("p_to_audit_date", OracleDbType.Varchar2)
-                           .Value = request.ToAuditDate;
-
-                        cmd.Parameters.Add("p_page_no", OracleDbType.Int32)
-                           .Value = request.PageNumber != null ? request.PageNumber - 1 : request.PageNumber;
-
-                        cmd.Parameters.Add("p_page_size", OracleDbType.Int32)
-                           .Value = request.PageSize;
-
-                        cmd.Parameters.Add("p_err", OracleDbType.Varchar2, 4000)
-                           .Direction = ParameterDirection.Output;
-
-                        cmd.Parameters.Add("p_count", OracleDbType.Int32)
-                           .Direction = ParameterDirection.Output;
-
-                        cmd.Parameters.Add("p_result", OracleDbType.RefCursor)
-                           .Direction = ParameterDirection.Output;
+                        cmd.Parameters.Add("p_gsfs_receipt_no", OracleDbType.Varchar2).Value = request.ReceiptNo;
+                        cmd.Parameters.Add("p_audit_type_id", OracleDbType.Int32).Value = request.AuditTypeId;
+                        cmd.Parameters.Add("p_suspicious", OracleDbType.Varchar2).Value = request.Suspicious;
+                        cmd.Parameters.Add("p_from_audit_date", OracleDbType.Varchar2).Value = request.FromAuditDate;
+                        cmd.Parameters.Add("p_to_audit_date", OracleDbType.Varchar2).Value = request.ToAuditDate;
+                        cmd.Parameters.Add("p_page_no", OracleDbType.Int32).Value = request.PageNumber != null ? request.PageNumber - 1 : request.PageNumber;
+                        cmd.Parameters.Add("p_page_size", OracleDbType.Int32).Value = request.PageSize;
+                        cmd.Parameters.Add("p_err", OracleDbType.Varchar2, 4000).Direction = ParameterDirection.Output;
+                        cmd.Parameters.Add("p_count", OracleDbType.Int32).Direction = ParameterDirection.Output;
+                        cmd.Parameters.Add("p_result", OracleDbType.RefCursor).Direction = ParameterDirection.Output;
 
                         await cmd.ExecuteNonQueryAsync();
 
