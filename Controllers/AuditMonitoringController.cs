@@ -23,8 +23,19 @@ namespace CallAuditPortal1.Controllers
         [HttpPost("SubmitToBranch")]
         public async Task<IActionResult> SubmitToBranch([FromBody] SubmitBranchRequest request)
         {
-            var result = await _auditMonitoringService.SubmitToBranch(request);
-            return Ok(result);
+            try
+            {
+                var result = await _auditMonitoringService.SubmitToBranch(request);
+                return Ok(new
+                {
+                    success = true,
+                    message = result
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
        
         [HttpPost("Reject")]

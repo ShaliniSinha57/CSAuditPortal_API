@@ -14,13 +14,8 @@
 
         public class SubmitBranchRequest
         {
-        public int Id { get; set; }
-
-        public string Status { get; set; }
-
-        public string AuditType { get; set; }
-
-        public List<int> SelectedIds { get; set; }
+        public int AuditTypeId { get; set; }
+        public List<string> GSFS_Receipt_Nos { get; set; }
     }
 
 

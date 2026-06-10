@@ -1,10 +1,8 @@
-﻿using CallAuditPortal1.Model;
-using CallAuditPortal1.Model.RequestDTO;
+﻿using CallAuditPortal1.Model.RequestDTO;
 using CallAuditPortal1.Service.Interface;
 using OfficeOpenXml;
 using Oracle.ManagedDataAccess.Client;
 using Oracle.ManagedDataAccess.Types;
-using System.Configuration;
 using System.Data;
 using System.Dynamic;
 

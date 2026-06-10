@@ -21,64 +21,22 @@ namespace CallAuditPortal1.Service.DAL
         }
         public async Task<string> SubmitToBranch(SubmitBranchRequest request)
         {
-            using (OracleConnection con =
-                   new OracleConnection(_configuration.GetConnectionString("DefaultConnection")))
+            using (OracleConnection con = new OracleConnection(_configuration.GetConnectionString("DefaultConnection")))
             {
                 await con.OpenAsync();
-
-                foreach (int id in request.SelectedIds)
+                using (OracleCommand cmd = new OracleCommand("report_pkg.submit_reject", con))
                 {
-                    string escEmail = "";
-                    string lgcEmail = "";
-                    string asmEmail = "";
-                    string bsmEmail = "";
-                    string claimNo = "";
-                    string auditType = "";
-
-                    string query = @"
-                SELECT
-                    ESC_EMAIL,
-                    LGC_EMAIL,
-                    ASM_EMAIL,
-                    BSM_EMAIL,
-                    CLAIM_NO,
-                    AUDIT_TYPE
-                FROM AUDIT_MONITORING
-                WHERE ID = :ID";
-
-                    using (OracleCommand cmd = new OracleCommand(query, con))
-                    {
-                        cmd.Parameters.Add("ID", OracleDbType.Int32).Value = id;
-
-                        using (OracleDataReader reader = await cmd.ExecuteReaderAsync())
-                        {
-                            if (await reader.ReadAsync())
-                            {
-                                escEmail = reader["ESC_EMAIL"]?.ToString();
-                                escEmail = reader["LGC_EMAIL"]?.ToString();
-                                asmEmail = reader["ASM_EMAIL"]?.ToString();
-                                bsmEmail = reader["BSM_EMAIL"]?.ToString();
-                                claimNo = reader["CLAIM_NO"]?.ToString();
-                                auditType = reader["AUDIT_TYPE"]?.ToString();
-                            }
-                        }
-                    }
-
-                    Email email = new Email
-                    {
-                        To = $"{escEmail},{lgcEmail}",
-                        CC = $"{asmEmail},{bsmEmail}",
-                        MailSubject = "Audit Submitted To Branch",
-                        MailBody = $@"
-                    Claim No : {claimNo}<br/>
-                    Audit Type : {auditType}<br/>
-                    Status : Submitted To Branch"
-                    };
-
-                    SendingEmail(email, _configuration);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    string receiptNos = string.Join(",", request.GSFS_Receipt_Nos);
+                    cmd.Parameters.Add("p_audit_type_id", OracleDbType.Int32).Value = request.AuditTypeId;
+                    cmd.Parameters.Add("p_gsfs_receipt_nos", OracleDbType.Varchar2).Value = receiptNos;
+                    cmd.Parameters.Add("p_action", OracleDbType.Varchar2).Value = "SUBMIT_TO_BRANCH";
+                    cmd.Parameters.Add("p_msg", OracleDbType.Varchar2, 500).Direction = ParameterDirection.Output;
+                    await cmd.ExecuteNonQueryAsync();
+                    var message = cmd.Parameters["p_msg"].Value?.ToString();
+                    return message;
                 }
 
-                return "Submitted To Branch Successfully";
             }
         }
         public static void SendingEmail(Email email, IConfiguration configuration)
@@ -163,6 +121,7 @@ namespace CallAuditPortal1.Service.DAL
                     string receiptNos = string.Join(",", request.GSFS_Receipt_Nos);
                     cmd.Parameters.Add("p_audit_type_id", OracleDbType.Int32).Value = request.AuditTypeId;
                     cmd.Parameters.Add("p_gsfs_receipt_nos", OracleDbType.Varchar2).Value = receiptNos;
+                    cmd.Parameters.Add("p_action", OracleDbType.Varchar2).Value = "REJECT";
                     cmd.Parameters.Add("p_msg", OracleDbType.Varchar2, 500).Direction = ParameterDirection.Output;
                     await cmd.ExecuteNonQueryAsync();
                     var message = cmd.Parameters["p_msg"].Value?.ToString();
