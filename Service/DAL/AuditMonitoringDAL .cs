@@ -2,7 +2,9 @@
 using CallAuditPortal1.Model.RequestDTO;
 using CallAuditPortal1.Service.Interface;
 using DocumentFormat.OpenXml.Spreadsheet;
+using OfficeOpenXml;
 using Oracle.ManagedDataAccess.Client;
+using Oracle.ManagedDataAccess.Types;
 using System.Data;
 using System.Net;
 using System.Net.Mail;
@@ -17,99 +19,24 @@ namespace CallAuditPortal1.Service.DAL
         {
             _configuration = configuration;
         }
-        public async Task<List<AuditMonitoringModel>> SearchAuditData(AuditSearchRequest request)
+        public async Task<string> SubmitToBranch(SubmitBranchRequest request)
         {
-            List<AuditMonitoringModel> data = new List<AuditMonitoringModel>();
             using (OracleConnection con = new OracleConnection(_configuration.GetConnectionString("DefaultConnection")))
             {
                 await con.OpenAsync();
-                using (OracleCommand cmd =
-                       new OracleCommand("report_pkg.get_audit_data", con))
+                using (OracleCommand cmd = new OracleCommand("report_pkg.submit_reject", con))
                 {
-                    cmd.BindByName = true;
-                    cmd.Parameters.Add("STATUS", OracleDbType.Varchar2).Value = request.Status;
-                    cmd.Parameters.Add("AUDIT_TYPE", OracleDbType.Varchar2).Value = request.AuditType;
-                    cmd.Parameters.Add("FROM_DATE", OracleDbType.Varchar2).Value = request.FromDate;
-                    cmd.Parameters.Add("TO_DATE", OracleDbType.Varchar2).Value = request.ToDate;
-                    OracleDataReader reader = await cmd.ExecuteReaderAsync();
-                    while (
-                        await reader.ReadAsync())
-
-                    {
-                        data.Add(new AuditMonitoringModel
-                        {
-                                Id = Convert.ToInt32(reader["ID"]),
-                           
-                            Status = reader["STATUS"].ToString(),
-                            AuditType = reader["AUDIT_TYPE"].ToString(),
-                            AuditDate = reader["AUDIT_DATE"].ToString(),
-                            
-                        });
-                    }
-                }
-            }
-            return data;
-        }
-        public async Task<string> SubmitToBranch(SubmitBranchRequest request)
-        {
-            using (OracleConnection con =
-                   new OracleConnection(_configuration.GetConnectionString("DefaultConnection")))
-            {
-                await con.OpenAsync();
-
-                foreach (int id in request.SelectedIds)
-                {
-                    string escEmail = "";
-                    string lgcEmail = "";
-                    string asmEmail = "";
-                    string bsmEmail = "";
-                    string claimNo = "";
-                    string auditType = "";
-
-                    string query = @"
-                SELECT
-                    ESC_EMAIL,
-                    LGC_EMAIL,
-                    ASM_EMAIL,
-                    BSM_EMAIL,
-                    CLAIM_NO,
-                    AUDIT_TYPE
-                FROM AUDIT_MONITORING
-                WHERE ID = :ID";
-
-                    using (OracleCommand cmd = new OracleCommand(query, con))
-                    {
-                        cmd.Parameters.Add("ID", OracleDbType.Int32).Value = id;
-
-                        using (OracleDataReader reader = await cmd.ExecuteReaderAsync())
-                        {
-                            if (await reader.ReadAsync())
-                            {
-                                escEmail = reader["ESC_EMAIL"]?.ToString();
-                                escEmail = reader["LGC_EMAIL"]?.ToString();
-                                asmEmail = reader["ASM_EMAIL"]?.ToString();
-                                bsmEmail = reader["BSM_EMAIL"]?.ToString();
-                                claimNo = reader["CLAIM_NO"]?.ToString();
-                                auditType = reader["AUDIT_TYPE"]?.ToString();
-                            }
-                        }
-                    }
-
-                    Email email = new Email
-                    {
-                        To = $"{escEmail},{lgcEmail}",
-                        CC = $"{asmEmail},{bsmEmail}",
-                        MailSubject = "Audit Submitted To Branch",
-                        MailBody = $@"
-                    Claim No : {claimNo}<br/>
-                    Audit Type : {auditType}<br/>
-                    Status : Submitted To Branch"
-                    };
-
-                    SendingEmail(email, _configuration);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    string receiptNos = string.Join(",", request.GSFS_Receipt_Nos);
+                    cmd.Parameters.Add("p_audit_type_id", OracleDbType.Int32).Value = request.AuditTypeId;
+                    cmd.Parameters.Add("p_gsfs_receipt_nos", OracleDbType.Varchar2).Value = receiptNos;
+                    cmd.Parameters.Add("p_action", OracleDbType.Varchar2).Value = "SUBMIT_TO_BRANCH";
+                    cmd.Parameters.Add("p_msg", OracleDbType.Varchar2, 500).Direction = ParameterDirection.Output;
+                    await cmd.ExecuteNonQueryAsync();
+                    var message = cmd.Parameters["p_msg"].Value?.ToString();
+                    return message;
                 }
 
-                return "Submitted To Branch Successfully";
             }
         }
         public static void SendingEmail(Email email, IConfiguration configuration)
@@ -185,18 +112,68 @@ namespace CallAuditPortal1.Service.DAL
 
         public async Task<string> Reject(RejectRequest request)
         {
-            using OracleConnection con = new OracleConnection( _configuration.GetConnectionString("DefaultConnection"));
-            await con.OpenAsync();
-            foreach (var id in request.Ids)
+            using (OracleConnection con = new OracleConnection(_configuration.GetConnectionString("DefaultConnection")))
             {
-                using OracleCommand cmd = new OracleCommand("report_pkg.submit_reject", con);
-                cmd.CommandType = CommandType.StoredProcedure;
+                await con.OpenAsync();
+                using (OracleCommand cmd = new OracleCommand("report_pkg.submit_reject", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    string receiptNos = string.Join(",", request.GSFS_Receipt_Nos);
+                    cmd.Parameters.Add("p_audit_type_id", OracleDbType.Int32).Value = request.AuditTypeId;
+                    cmd.Parameters.Add("p_gsfs_receipt_nos", OracleDbType.Varchar2).Value = receiptNos;
+                    cmd.Parameters.Add("p_action", OracleDbType.Varchar2).Value = "REJECT";
+                    cmd.Parameters.Add("p_msg", OracleDbType.Varchar2, 500).Direction = ParameterDirection.Output;
+                    await cmd.ExecuteNonQueryAsync();
+                    var message = cmd.Parameters["p_msg"].Value?.ToString();
+                    return message;
+                }
 
-                cmd.Parameters.Add("p_id", OracleDbType.Int32).Value = id;
-                cmd.Parameters.Add("p_reason", OracleDbType.Varchar2).Value = request.Reason;
-                await cmd.ExecuteNonQueryAsync();
             }
-            return "Rejected Successfully!";
+        }
+
+        public async Task<byte[]> Download(DownloadRequest request)
+        {
+            using OracleConnection con = new OracleConnection(
+                _configuration.GetConnectionString("DefaultConnection"));
+            await con.OpenAsync();
+            using OracleCommand cmd = new OracleCommand("report_pkg.download_audit_data", con);
+            cmd.CommandType = CommandType.StoredProcedure;
+            string receiptNos = string.Join(",", request.GSFS_Receipt_Nos);
+            cmd.Parameters.Add("p_audit_type_id", OracleDbType.Int32).Value = request.AuditTypeId;
+            cmd.Parameters.Add("p_gsfs_receipt_nos", OracleDbType.Varchar2).Value = receiptNos;
+            cmd.Parameters.Add("p_result", OracleDbType.RefCursor).Direction = ParameterDirection.Output;
+            cmd.Parameters.Add("p_msg", OracleDbType.Varchar2, 500).Direction = ParameterDirection.Output;
+
+            await cmd.ExecuteNonQueryAsync();
+            var message = cmd.Parameters["p_msg"].Value?.ToString();
+            
+            OracleRefCursor cursor = (OracleRefCursor)cmd.Parameters["p_result"].Value;
+            using OracleDataReader reader = cursor.GetDataReader();
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+            using ExcelPackage package = new ExcelPackage();
+            var worksheet = package.Workbook.Worksheets.Add("Audit Report");
+            int row = 1;
+            for (int col = 0; col < reader.FieldCount; col++)
+            {
+                worksheet.Cells[row, col + 1].Value =
+                    reader.GetName(col);
+                worksheet.Cells[row, col + 1]
+                         .Style.Font.Bold = true;
+            }
+            row++;
+            while (await reader.ReadAsync())
+            {
+                for (int col = 0; col < reader.FieldCount; col++)
+                {
+                    worksheet.Cells[row, col + 1].Value =
+                        reader.IsDBNull(col)
+                            ? ""
+                            : reader.GetValue(col);
+                }
+                row++;
+            }
+            worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
+            return package.GetAsByteArray();
         }
     }
 }

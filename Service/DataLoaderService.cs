@@ -209,7 +209,7 @@ namespace CallAuditPortal1.Service
                 return ($"Error while inserting data : {ex.Message}", "");
             }
         }
-        public async Task<List<dynamic>> VerifyUpload(string sessionId, string templateId)
+        public async Task<(int TotalData, List<dynamic>)> SearchAuditData(AuditSearchRequest request)
         {
             List<dynamic> data = new List<dynamic>();
 
@@ -220,32 +220,37 @@ namespace CallAuditPortal1.Service
                 {
                     await con.OpenAsync();
 
+                    var screenType = string.IsNullOrWhiteSpace(request.SessionId)
+                 ? "SUBMIT"
+                 : "VERIFY";
                     using (OracleCommand cmd =
                            new OracleCommand("report_pkg.get_audit_data", con))
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
 
-                        // INPUT PARAMETERS
-
                         cmd.Parameters.Add("p_session_id", OracleDbType.Varchar2)
-                           .Value = sessionId;
+                           .Value = request.SessionId;
 
                         cmd.Parameters.Add("p_audit_status", OracleDbType.Varchar2)
-                           .Value = DBNull.Value;
+                           .Value = request.AuditStatus;
 
                         cmd.Parameters.Add("p_audit_type_id", OracleDbType.Int32)
-                           .Value = Convert.ToInt32(templateId);
-
+                           .Value = request.AuditTypeId;
+                       
                         cmd.Parameters.Add("p_screen_type", OracleDbType.Varchar2)
-                           .Value = "VERIFY";
+                           .Value = screenType;
 
                         cmd.Parameters.Add("p_from_date", OracleDbType.Varchar2)
-                           .Value = DBNull.Value;
+                           .Value = request.FromDate;
 
                         cmd.Parameters.Add("p_to_date", OracleDbType.Varchar2)
-                           .Value = DBNull.Value;
+                           .Value = request.ToDate;
 
-                        // OUTPUT PARAMETERS
+                        cmd.Parameters.Add("p_pageIndex", OracleDbType.Int32)
+                           .Value = request.Page != null ? request.Page-1 : request.Page;
+
+                        cmd.Parameters.Add("p_pageSize", OracleDbType.Int32)
+                           .Value = request.Limit;
 
                         cmd.Parameters.Add("p_err", OracleDbType.Varchar2, 4000)
                            .Direction = ParameterDirection.Output;
@@ -258,15 +263,13 @@ namespace CallAuditPortal1.Service
 
                         await cmd.ExecuteNonQueryAsync();
 
-                        // READ REF CURSOR
-
-                        OracleRefCursor refCursor =
-                            (OracleRefCursor)cmd.Parameters["p_result"].Value;
-
+                        OracleRefCursor refCursor = (OracleRefCursor)cmd.Parameters["p_result"].Value;
+                       
                         using (OracleDataReader reader = refCursor.GetDataReader())
                         {
                             while (await reader.ReadAsync())
                             {
+                                Console.WriteLine("Row Found");
                                 var row = new ExpandoObject() as IDictionary<string, object>;
 
                                 for (int i = 0; i < reader.FieldCount; i++)
@@ -282,12 +285,9 @@ namespace CallAuditPortal1.Service
                                 data.Add(row);
                             }
                         }
-
-                        string errMsg =
-                            cmd.Parameters["p_err"].Value?.ToString();
-
-                        string count =
-                            cmd.Parameters["p_count"].Value?.ToString();
+                        string errMsg = cmd.Parameters["p_err"].Value?.ToString();
+                        int count = Convert.ToInt32(cmd.Parameters["p_count"].Value?.ToString());
+                        return (count, data);
                     }
                 }
             }
@@ -298,7 +298,6 @@ namespace CallAuditPortal1.Service
                     " | Inner Exception : " + ex.InnerException?.Message
                 );
             }
-            return data;
         }
         public async Task<string> SaveStatus(SaveStatusRequest request)
         {
@@ -308,43 +307,21 @@ namespace CallAuditPortal1.Service
                 await con.OpenAsync();
 
                 using (OracleCommand cmd =
-                       new OracleCommand(" excel_pkg.verify_reject_uploaded_data", con))
+                       new OracleCommand("csnet_plus_excel_pkg.verify_reject_uploaded_data", con))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
                     string receiptNos = string.Join(",", request.SelectedIds);
-                    cmd.Parameters.Add(
-                        "p_session_id",
-                        OracleDbType.Varchar2
-                    ).Value = request.SessionId;
-                    cmd.Parameters.Add(
-                        "p_audit_type_id",
-                        OracleDbType.Int32
-                    ).Value = request.AuditTypeId;
-
-                    cmd.Parameters.Add(
-                        "p_status",
-                        OracleDbType.Varchar2
-                    ).Value = request.Status;
-
-                    cmd.Parameters.Add(
-                        "p_gsfs_receipt_nos",
-                        OracleDbType.Varchar2
-                    ).Value = receiptNos;
-
-                    // OUTPUT PARAMETER
-                    cmd.Parameters.Add(
-                        "p_msg",
-                        OracleDbType.Varchar2,
-                        4000
-                    ).Direction = ParameterDirection.Output;
-
+                    cmd.Parameters.Add("p_session_id",OracleDbType.Varchar2).Value = request.SessionId;
+                    cmd.Parameters.Add("p_audit_type_id",OracleDbType.Int32).Value = request.AuditTypeId;
+                    cmd.Parameters.Add("p_remarks", OracleDbType.Varchar2).Value = null;
+                    cmd.Parameters.Add("p_status",OracleDbType.Varchar2).Value = "PENDING";
+                    cmd.Parameters.Add("p_gsfs_receipt_nos",OracleDbType.Varchar2).Value = receiptNos;
+                    cmd.Parameters.Add("p_msg",OracleDbType.Varchar2,4000).Direction = ParameterDirection.Output;
                     await cmd.ExecuteNonQueryAsync();
-
                     return cmd.Parameters["p_msg"].Value?.ToString();
                 }
             }
         }
-
         public async Task<string> RejectStatus(RejectUploadedDataRequest request)
         {
             try
@@ -380,9 +357,14 @@ namespace CallAuditPortal1.Service
                         ).Value = request.AuditTypeId;
 
                         cmd.Parameters.Add(
+                            "p_remarks",
+                            OracleDbType.Varchar2
+                        ).Value = request.Reason;
+
+                        cmd.Parameters.Add(
                             "p_status",
                             OracleDbType.Varchar2
-                        ).Value = request.Status;
+                        ).Value = "REJECTED";
 
                         cmd.Parameters.Add(
                             "p_gsfs_receipt_nos",
@@ -407,10 +389,6 @@ namespace CallAuditPortal1.Service
                 return ex.Message;
             }
         }
-
-
-
-
     }
 
 }

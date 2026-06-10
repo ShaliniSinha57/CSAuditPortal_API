@@ -4,8 +4,9 @@ using CallAuditPortal1.Service.BAL;
 using CallAuditPortal1.Service.DAL;
 using CallAuditPortal1.Service.Interface;
 using Microsoft.EntityFrameworkCore;
-using OfficeOpenXml;
+using Quartz;
 using Oracle.ManagedDataAccess.Client;
+using CallAuditPortal1.Service.BAL.Schedular;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddScoped<OracleConnection>(x =>
@@ -24,11 +25,32 @@ builder.Services.AddTransient<AuditDAL>();
 builder.Services.AddScoped<IDataLoaderService, DataLoaderService>();
 builder.Services.AddScoped<IAuditMonitoringDAL, AuditMonitoringDAL>();
 builder.Services.AddScoped<IAuditMonitoringService, AuditMonitoringService>();
+builder.Services.AddScoped<IReviewProcessDAL, ReviewProcessDAL>();
+
+
 
 
 builder.Services.AddDbContext<DbContext>(options =>
 {
   options.UseOracle(builder.Configuration.GetConnectionString("OracleConnection"));
+});
+
+// Add Schedular
+
+builder.Services.AddQuartz(q =>
+{
+    var sendMailJobKey = new JobKey("SendMailSchedular");
+
+    q.AddJob<SendMailSchedular>(opts => opts.WithIdentity(sendMailJobKey));
+    q.AddTrigger(opts => opts
+        .ForJob(sendMailJobKey)
+        .WithIdentity("SendMailRecordsTrigger")
+        .WithCronSchedule("0 0 1 * * ?"));
+});
+
+builder.Services.AddQuartzHostedService(options =>
+{
+    options.WaitForJobsToComplete = true;
 });
 // Add Swagger services
 builder.Services.AddEndpointsApiExplorer();

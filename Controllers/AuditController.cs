@@ -62,19 +62,18 @@ namespace CallAuditPortal1.Controllers
         throw;
       }
     }
-        [HttpGet("verify-upload")]
-        public async Task<IActionResult> VerifyUpload(string sessionId, string templateId)
-
-
+        [HttpPost("search-audit")]
+        public async Task<IActionResult> SearchAuditData([FromBody] AuditSearchRequest request)
         {
             try
             {
-                var data = await _service.VerifyUpload(sessionId, templateId);
+                var data = await _service.SearchAuditData(request);
 
                 return Ok(new
                 {
                     success = true,
-                    data = data
+                    totalRecords = data.Item1,
+                    data = data.Item2
                 });
             }
             catch (Exception ex)
@@ -87,22 +86,37 @@ namespace CallAuditPortal1.Controllers
         [HttpPost("save-status")]
         public async Task<IActionResult> SaveStatus([FromBody] SaveStatusRequest request)
         {
-            var result = await _service.SaveStatus(request);
-            return Ok(new 
+            try
             {
-                message = "Data Saved Successfully"
-            });
+                var result = await _service.SaveStatus(request);
+                return Ok(new
+                {
+                    message = "Data Saved Successfully"
+                });
+            }
+            catch(Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+            
         }
 
         [HttpPost("reject-status")]
         public async Task<IActionResult> RejectStatus([FromBody] RejectUploadedDataRequest request)
         {
-            var result = await _service.RejectStatus(request);
-            return Ok(new 
-            { 
-                message = "File Rejected Successfully"
+            try
+            {
+                var result = await _service.RejectStatus(request);
+                return Ok(new
+                {
+                    message = "File Rejected Successfully"
+                }
+                );
             }
-            );
+           catch(Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
 
 

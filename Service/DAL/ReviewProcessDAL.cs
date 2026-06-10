@@ -1,10 +1,8 @@
-﻿using CallAuditPortal1.Model;
-using CallAuditPortal1.Model.RequestDTO;
+﻿using CallAuditPortal1.Model.RequestDTO;
 using CallAuditPortal1.Service.Interface;
 using OfficeOpenXml;
 using Oracle.ManagedDataAccess.Client;
 using Oracle.ManagedDataAccess.Types;
-using System.Configuration;
 using System.Data;
 using System.Dynamic;
 
@@ -61,137 +59,84 @@ namespace CallAuditPortal1.Service.DAL
             return package.GetAsByteArray();
         }
 
-        public async Task<ReviewProcessSearchResponse> SearchReviewProcess(
-     ReviewProcessSearchRequest request)
+        public async Task<(int,List<dynamic>)> SearchReviewProcess(ReviewProcessSearchRequest request)
         {
-            List<dynamic> data = new();
+            List<dynamic> data = new List<dynamic>();
 
             try
             {
-                using OracleConnection con = new OracleConnection(
-                    _configuration.GetConnectionString("DefaultConnection"));
-
-                await con.OpenAsync();
-
-                using OracleCommand cmd = new OracleCommand(
-                    "report_pkg.GET_REVIEW_DATA",
-                    con);
-
-                cmd.CommandType = CommandType.StoredProcedure;
-
-                cmd.Parameters.Add(
-                    "p_gsfs_reciept_no",
-                    OracleDbType.Varchar2)
-                    .Value =
-                        string.IsNullOrWhiteSpace(request.ReceiptNo)
-                        ? DBNull.Value
-                        : request.ReceiptNo;
-
-                cmd.Parameters.Add(
-                    "p_suspicious",
-                    OracleDbType.Varchar2)
-                    .Value =
-                        string.IsNullOrWhiteSpace(request.Suspicious)
-                        ? DBNull.Value
-                        : request.Suspicious;
-
-                cmd.Parameters.Add(
-                    "p_from_audit_date",
-                    OracleDbType.Varchar2)
-                    .Value =
-                        request.FromAuditDate.HasValue
-                        ? request.FromAuditDate.Value.ToString("yyyyMMdd")
-                        : DBNull.Value;
-
-                cmd.Parameters.Add(
-                    "p_to_audit_date",
-                    OracleDbType.Varchar2)
-                    .Value =
-                        request.ToAuditDate.HasValue
-                        ? request.ToAuditDate.Value.ToString("yyyyMMdd")
-                        : DBNull.Value;
-
-                cmd.Parameters.Add(
-                    "p_page_no",
-                    OracleDbType.Int32)
-                    .Value =
-                        request.PageNumber ?? 1;
-
-                cmd.Parameters.Add(
-                    "p_page_size",
-                    OracleDbType.Int32)
-                    .Value =
-                        request.PageSize ?? 10;
-
-                cmd.Parameters.Add(
-                    "p_err",
-                    OracleDbType.Varchar2,
-                    4000)
-                    .Direction =
-                        ParameterDirection.Output;
-
-                cmd.Parameters.Add(
-                    "p_count",
-                    OracleDbType.Int32)
-                    .Direction =
-                        ParameterDirection.Output;
-
-                cmd.Parameters.Add(
-                    "p_result",
-                    OracleDbType.RefCursor)
-                    .Direction =
-                        ParameterDirection.Output;
-
-                await cmd.ExecuteNonQueryAsync();
-
-                OracleRefCursor refCursor =
-                    (OracleRefCursor)cmd.Parameters["p_result"].Value;
-
-                using OracleDataReader reader =
-                    refCursor.GetDataReader();
-
-                while (await reader.ReadAsync())
+                using (OracleConnection con =
+                       new OracleConnection(_configuration.GetConnectionString("DefaultConnection")))
                 {
-                    IDictionary<string, object> row =
-                        new ExpandoObject();
-
-                    for (int i = 0; i < reader.FieldCount; i++)
+                    await con.OpenAsync();
+                    using (OracleCommand cmd =
+                           new OracleCommand("report_pkg.GET_REVIEW_DATA", con))
                     {
-                        row.Add(
-                            reader.GetName(i),
-                            reader.IsDBNull(i)
-                                ? null
-                                : reader.GetValue(i));
+                        cmd.CommandType = CommandType.StoredProcedure;
+
+                        cmd.Parameters.Add("p_gsfs_reciept_no", OracleDbType.Varchar2)
+                           .Value = request.ReceiptNo;
+
+                        cmd.Parameters.Add("p_suspicious", OracleDbType.Varchar2)
+                           .Value = request.Suspicious;
+
+                        cmd.Parameters.Add("p_from_audit_date", OracleDbType.Varchar2)
+                           .Value = request.FromAuditDate;
+
+                        cmd.Parameters.Add("p_to_audit_date", OracleDbType.Varchar2)
+                           .Value = request.ToAuditDate;
+
+                        cmd.Parameters.Add("p_page_no", OracleDbType.Int32)
+                           .Value = request.PageNumber != null ? request.PageNumber - 1 : request.PageNumber;
+
+                        cmd.Parameters.Add("p_page_size", OracleDbType.Int32)
+                           .Value = request.PageSize;
+
+                        cmd.Parameters.Add("p_err", OracleDbType.Varchar2, 4000)
+                           .Direction = ParameterDirection.Output;
+
+                        cmd.Parameters.Add("p_count", OracleDbType.Int32)
+                           .Direction = ParameterDirection.Output;
+
+                        cmd.Parameters.Add("p_result", OracleDbType.RefCursor)
+                           .Direction = ParameterDirection.Output;
+
+                        await cmd.ExecuteNonQueryAsync();
+
+                        OracleRefCursor refCursor = (OracleRefCursor)cmd.Parameters["p_result"].Value;
+
+                        using (OracleDataReader reader = refCursor.GetDataReader())
+                        {
+                            while (await reader.ReadAsync())
+                            {
+                                Console.WriteLine("Row Found");
+                                var row = new ExpandoObject() as IDictionary<string, object>;
+
+                                for (int i = 0; i < reader.FieldCount; i++)
+                                {
+                                    row.Add(
+                                        reader.GetName(i),
+                                        reader.IsDBNull(i)
+                                            ? null
+                                            : reader.GetValue(i)
+                                    );
+                                }
+
+                                data.Add(row);
+                            }
+                        }
+                        string errMsg = cmd.Parameters["p_err"].Value?.ToString();
+                        int count = Convert.ToInt32(cmd.Parameters["p_count"].Value?.ToString());
+                        return (count, data);
                     }
-
-                    data.Add(row);
                 }
-
-                string errMsg =
-                    cmd.Parameters["p_err"].Value?.ToString();
-
-                if (!string.IsNullOrWhiteSpace(errMsg))
-                {
-                    throw new Exception(errMsg);
-                }
-
-                int count =
-                    cmd.Parameters["p_count"].Value == DBNull.Value
-                    ? 0
-                    : Convert.ToInt32(
-                        cmd.Parameters["p_count"].Value);
-
-                return new ReviewProcessSearchResponse
-                {
-                    Count = count,
-                    Data = data
-                };
             }
             catch (Exception ex)
             {
                 throw new Exception(
-                    $"Error in SearchReviewProcess: {ex.Message}",
-                    ex);
+                    "Error in VerifyUpload : " + ex.Message +
+                    " | Inner Exception : " + ex.InnerException?.Message
+                );
             }
         }
     }
