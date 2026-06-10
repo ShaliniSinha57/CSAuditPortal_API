@@ -15,20 +15,25 @@ namespace CallAuditPortal1.Service.DAL
         {
             _configuration = configuration;
         }
-        public async Task<byte[]> DownloadReviewProcess(DownloadReviewProcessRequest request)
+        public async Task<byte[]> DownloadReviewProcess(ReviewProcessSearchRequest request)
         {
             using OracleConnection con = new OracleConnection(
                 _configuration.GetConnectionString("DefaultConnection"));
             await con.OpenAsync();
-            using OracleCommand cmd = new OracleCommand("report_pkg.download_audit_data", con);
+            using OracleCommand cmd = new OracleCommand("CSNET_PLUS_REPORT_PKG.GET_REVIEW_DATA", con);
             cmd.CommandType = CommandType.StoredProcedure;
-            string receiptNos = string.Join(",", request.SelectedIds);
-            cmd.Parameters.Add("p_gsfs_receipt_nos", OracleDbType.Varchar2).Value = receiptNos;
+            cmd.Parameters.Add("p_gsfs_receipt_no", OracleDbType.Varchar2).Value = request.ReceiptNo;
+            cmd.Parameters.Add("p_audit_type_id", OracleDbType.Int32).Value = request.AuditTypeId;
+            cmd.Parameters.Add("p_suspicious", OracleDbType.Varchar2).Value = request.Suspicious;
+            cmd.Parameters.Add("p_from_audit_date", OracleDbType.Varchar2).Value = request.FromAuditDate;
+            cmd.Parameters.Add("p_to_audit_date", OracleDbType.Varchar2).Value = request.ToAuditDate;
+            cmd.Parameters.Add("p_page_no", OracleDbType.Int32).Value = request.PageNumber != null ? request.PageNumber - 1 : request.PageNumber;
+            cmd.Parameters.Add("p_page_size", OracleDbType.Int32).Value = request.PageSize;
+            cmd.Parameters.Add("p_err", OracleDbType.Varchar2, 4000).Direction = ParameterDirection.Output;
+            cmd.Parameters.Add("p_count", OracleDbType.Int32).Direction = ParameterDirection.Output;
             cmd.Parameters.Add("p_result", OracleDbType.RefCursor).Direction = ParameterDirection.Output;
-            cmd.Parameters.Add("p_msg", OracleDbType.Varchar2, 500).Direction = ParameterDirection.Output;
 
             await cmd.ExecuteNonQueryAsync();
-            var message = cmd.Parameters["p_msg"].Value?.ToString();
 
             OracleRefCursor cursor = (OracleRefCursor)cmd.Parameters["p_result"].Value;
             using OracleDataReader reader = cursor.GetDataReader();
@@ -70,7 +75,7 @@ namespace CallAuditPortal1.Service.DAL
                 {
                     await con.OpenAsync();
                     using (OracleCommand cmd =
-                           new OracleCommand("report_pkg.GET_REVIEW_DATA", con))
+                           new OracleCommand("CSNET_PLUS_REPORT_PKG.GET_REVIEW_DATA", con))
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
                         cmd.Parameters.Add("p_gsfs_receipt_no", OracleDbType.Varchar2).Value = request.ReceiptNo;
@@ -117,7 +122,7 @@ namespace CallAuditPortal1.Service.DAL
             catch (Exception ex)
             {
                 throw new Exception(
-                    "Error in VerifyUpload : " + ex.Message +
+                    "Error in Search Review Process : " + ex.Message +
                     " | Inner Exception : " + ex.InnerException?.Message
                 );
             }

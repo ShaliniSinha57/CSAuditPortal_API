@@ -225,7 +225,7 @@ namespace CallAuditPortal1.Service
                  ? "SUBMIT"
                  : "VERIFY";
                     using (OracleCommand cmd =
-                           new OracleCommand("report_pkg.get_audit_data", con))
+                           new OracleCommand("CSNET_PLUS_REPORT_PKG.get_audit_data", con))
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
 
