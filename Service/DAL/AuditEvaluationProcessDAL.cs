@@ -28,9 +28,9 @@ namespace CallAuditPortal1.Service.DAL
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
                         cmd.Parameters.Add("p_gsfs_receipt_no", OracleDbType.Varchar2).Value = receipt_no;
-                        cmd.Parameters.Add("p_audit_type_id", OracleDbType.Varchar2).Value = audit_typeId;
+                        cmd.Parameters.Add("p_audit_type_id", OracleDbType.Int32).Value = audit_typeId;
 
-                        cmd.Parameters.Add("p_msg", OracleDbType.Varchar2).Direction = ParameterDirection.Output;
+                        cmd.Parameters.Add("p_msg", OracleDbType.Varchar2, 4000).Direction = ParameterDirection.Output;
                         cmd.Parameters.Add("p_result", OracleDbType.RefCursor).Direction = ParameterDirection.Output;
 
                         await cmd.ExecuteNonQueryAsync();
