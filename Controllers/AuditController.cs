@@ -6,119 +6,117 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CallAuditPortal1.Controllers
 {
-  [Route("api/[controller]")]
-  [ApiController]
-  public class AuditController : ControllerBase
-  {
-    private readonly AuditBAL _auditBAL;
-    private readonly IDataLoaderService _service;
-    public AuditController(AuditBAL auditBAL, IDataLoaderService service)
-    {
-      _auditBAL = auditBAL;
-      _service = service;
-    }
-
-
-    [HttpGet("GetAuditDropdownList")]
-    public IActionResult GetAuditDropdownList()
-    {
-      var data = _auditBAL.GetDropdown();
-      return Ok(data);
-    }
-
-
-    [HttpGet("DownloadTemplate")]
-    public IActionResult DownloadTemplate()
-    {
-      try
+      [Route("api/[controller]")]
+      [ApiController]
+      public class AuditController : ControllerBase
       {
-        var data = _auditBAL.DownloadTemplate();
+            private readonly AuditBAL _auditBAL;
+            private readonly IDataLoaderService _service;
+            public AuditController(AuditBAL auditBAL, IDataLoaderService service)
+            {
+                _auditBAL = auditBAL;
+                _service = service;
+            }
 
-        return Ok(data);
-      }
-      catch (Exception ex)
-      {
-        return BadRequest(ex.Message);
-      }
-    }
-    
-    [HttpPost("ProcessUploadData")]
-    public async Task<IActionResult> ProcessUploadData(string fullPath, string auditType, string auditDate)
-    {
-            string sessionid = string.Empty;
-      try
-      {
-        var data = await _service.InsertDataIntoTempTable(fullPath, auditType, auditDate);
-                return Ok(new
+
+            [HttpGet("GetAuditDropdownList")]
+            public IActionResult GetAuditDropdownList()
+            {
+                var data = _auditBAL.GetDropdown();
+                return Ok(data);
+            }
+
+
+            [HttpGet("DownloadTemplate")]
+            public IActionResult DownloadTemplate()
+            {
+                try
                 {
-                    status = "Success",
-                    data = data.result,
-                    sessionId = data.session_Id
-                });
-            }
-      catch (Exception)
-      {
+                var data = _auditBAL.DownloadTemplate();
 
-        throw;
-      }
-    }
-        [HttpPost("search-audit")]
-        public async Task<IActionResult> SearchAuditData([FromBody] AuditSearchRequest request)
-        {
-            try
-            {
-                var data = await _service.SearchAuditData(request);
-
-                return Ok(new
-                {
-                    success = true,
-                    totalRecords = data.Item1,
-                    data = data.Item2
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
-        }
-
-
-        [HttpPost("save-status")]
-        public async Task<IActionResult> SaveStatus([FromBody] SaveStatusRequest request)
-        {
-            try
-            {
-                var result = await _service.SaveStatus(request);
-                return Ok(new
-                {
-                    message = "Data Saved Successfully"
-                });
-            }
-            catch(Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
-            
-        }
-
-        [HttpPost("reject-status")]
-        public async Task<IActionResult> RejectStatus([FromBody] RejectUploadedDataRequest request)
-        {
-            try
-            {
-                var result = await _service.RejectStatus(request);
-                return Ok(new
-                {
-                    message = "File Rejected Successfully"
+                return Ok(data);
                 }
-                );
+                catch (Exception ex)
+                {
+                return BadRequest(ex.Message);
+                }
             }
-           catch(Exception ex)
+    
+            [HttpPost("ProcessUploadData")]
+            public async Task<IActionResult> ProcessUploadData([FromForm] AuditUploadClaimRequest request)
             {
-                return StatusCode(500, ex.Message);
+                try
+                {
+                var data = await _service.InsertDataIntoTempTable(request);
+                    return Ok(new
+                    {
+                        status = "Success",
+                        data = data.result,
+                        sessionId = data.session_Id
+                    });
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(500, ex.Message);
+                }
             }
+            [HttpPost("search-audit")]
+            public async Task<IActionResult> SearchAuditData([FromBody] AuditSearchRequest request)
+            {
+                try
+                {
+                    var data = await _service.SearchAuditData(request);
+
+                    return Ok(new
+                    {
+                        success = true,
+                        totalRecords = data.Item1,
+                        data = data.Item2
+                    });
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(500, ex.Message);
+                }
+            }
+
+
+            [HttpPost("save-status")]
+            public async Task<IActionResult> SaveStatus([FromBody] SaveStatusRequest request)
+            {
+                try
+                {
+                    var result = await _service.SaveStatus(request);
+                    return Ok(new
+                    {
+                        message = "Data Saved Successfully"
+                    });
+                }
+                catch(Exception ex)
+                {
+                    return StatusCode(500, ex.Message);
+                }
+            
+            }
+
+            [HttpPost("reject-status")]
+            public async Task<IActionResult> RejectStatus([FromBody] RejectUploadedDataRequest request)
+            {
+                try
+                {
+                    var result = await _service.RejectStatus(request);
+                    return Ok(new
+                    {
+                        message = "File Rejected Successfully"
+                    }
+                    );
+                }
+               catch(Exception ex)
+                {
+                    return StatusCode(500, ex.Message);
+                }
+            }
+
+
         }
-
-
-    }
 }

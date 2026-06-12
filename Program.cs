@@ -23,9 +23,11 @@ builder.Services.AddTransient<DatabaseConnection>();
 builder.Services.AddTransient<AuditBAL>();
 builder.Services.AddTransient<AuditDAL>();
 builder.Services.AddScoped<IDataLoaderService, DataLoaderService>();
+builder.Services.AddScoped<IDataLoaderDAL, DataLoaderDAL>();
 builder.Services.AddScoped<IAuditMonitoringDAL, AuditMonitoringDAL>();
 builder.Services.AddScoped<IAuditMonitoringService, AuditMonitoringService>();
 builder.Services.AddScoped<IReviewProcessDAL, ReviewProcessDAL>();
+builder.Services.AddScoped<IAuditEvaluationProcessDAL, AuditEvaluationProcessDAL>();
 
 
 

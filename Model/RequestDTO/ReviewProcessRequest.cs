@@ -3,6 +3,7 @@
     public class ReviewProcessSearchRequest
     {
         public string ReceiptNo { get; set; }
+        public int AuditTypeId { get; set; }
         public string Suspicious { get; set; }
         public string FromAuditDate { get; set; }
         public string ToAuditDate { get; set; }

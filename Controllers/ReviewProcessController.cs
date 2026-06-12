@@ -27,7 +27,7 @@ namespace CallAuditPortal1.Controllers
                     success = true,
                     totalData = result.Item1,
                     data = result.Item2
-                });
+                }); 
             }
             catch (Exception ex)
             {
@@ -38,10 +38,20 @@ namespace CallAuditPortal1.Controllers
         
 
         [HttpPost("Download")]
-        public async Task<IActionResult> Download([FromBody] DownloadReviewProcessRequest request)
+        public async Task<IActionResult> Download([FromBody] ReviewProcessSearchRequest request)
         {
-            var result = await _services.DownloadReviewProcess(request);
-            return Ok(result);
+            try
+            {
+                var fileBytes = await _services.DownloadReviewProcess(request);
+                return File(
+                    fileBytes,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    $"Audit_Review_Search_{DateTime.Now:yyyyMMddHHmmss}.xlsx");
+            }
+            catch(Exception ex)
+            {
+                return StatusCode(500,ex.Message);
+            }
         }
 
     }
