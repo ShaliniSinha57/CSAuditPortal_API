@@ -26,7 +26,7 @@ namespace CallAuditPortal1.Controllers
                     success = true,
                     totalData = result.Item1,
                     data = result.Item2
-                });
+                }); 
             }
             catch (Exception ex)
             {
