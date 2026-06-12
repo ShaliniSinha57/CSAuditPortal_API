@@ -24,6 +24,7 @@ public class SaveStatusRequest
         public int AuditTypeId { get; set; } 
         public string Status { get; set; } 
         public string Reason { get; set; } 
-        public List<string> SelectedIds { get; set; } }
+        public List<string> SelectedIds { get; set; }
+    }
 }
 

@@ -24,7 +24,7 @@ namespace CallAuditPortal1.Service.DAL
             using (OracleConnection con = new OracleConnection(_configuration.GetConnectionString("DefaultConnection")))
             {
                 await con.OpenAsync();
-                using (OracleCommand cmd = new OracleCommand("report_pkg.submit_reject", con))
+                using (OracleCommand cmd = new OracleCommand("CSNET_PLUS.csnet_plus_report_pkg.submit_reject", con))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
                     string receiptNos = string.Join(",", request.GSFS_Receipt_Nos);
@@ -115,9 +115,10 @@ namespace CallAuditPortal1.Service.DAL
             using (OracleConnection con = new OracleConnection(_configuration.GetConnectionString("DefaultConnection")))
             {
                 await con.OpenAsync();
-                using (OracleCommand cmd = new OracleCommand("report_pkg.submit_reject", con))
+                using (OracleCommand cmd = new OracleCommand("CSNET_PLUS.CSNET_PLUS_REPORT_PKG.submit_reject", con))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.BindByName = true;
                     string receiptNos = string.Join(",", request.GSFS_Receipt_Nos);
                     cmd.Parameters.Add("p_audit_type_id", OracleDbType.Int32).Value = request.AuditTypeId;
                     cmd.Parameters.Add("p_gsfs_receipt_nos", OracleDbType.Varchar2).Value = receiptNos;
@@ -136,7 +137,7 @@ namespace CallAuditPortal1.Service.DAL
             using OracleConnection con = new OracleConnection(
                 _configuration.GetConnectionString("DefaultConnection"));
             await con.OpenAsync();
-            using OracleCommand cmd = new OracleCommand("report_pkg.download_audit_data", con);
+            using OracleCommand cmd = new OracleCommand("CSNET_PLUS.CSNET_PLUS_REPORT_PKG.download_audit_data", con);
             cmd.CommandType = CommandType.StoredProcedure;
             string receiptNos = string.Join(",", request.GSFS_Receipt_Nos);
             cmd.Parameters.Add("p_audit_type_id", OracleDbType.Int32).Value = request.AuditTypeId;

@@ -28,7 +28,7 @@ namespace CallAuditPortal1.Service
                     new OracleConnection(connectionString))
                 {
                     using (OracleCommand cmd =
-                        new OracleCommand("excel_pkg.excel_upld_proc", con))
+                        new OracleCommand("CSNET_PLUS.CSNET_PLUS_EXCEL_PKG.excel_upld_proc", con))
                     {
 
                         cmd.CommandType = CommandType.StoredProcedure;
@@ -224,8 +224,9 @@ namespace CallAuditPortal1.Service
                  ? "SUBMIT"
                  : "VERIFY";
                     using (OracleCommand cmd =
-                           new OracleCommand("report_pkg.get_audit_data", con))
+                           new OracleCommand("CSNET_PLUS.csnet_plus_report_pkg.get_audit_data", con))
                     {
+
                         cmd.CommandType = CommandType.StoredProcedure;
 
                         cmd.Parameters.Add("p_session_id", OracleDbType.Varchar2)
@@ -236,7 +237,7 @@ namespace CallAuditPortal1.Service
 
                         cmd.Parameters.Add("p_audit_type_id", OracleDbType.Int32)
                            .Value = request.AuditTypeId;
-                       
+
                         cmd.Parameters.Add("p_screen_type", OracleDbType.Varchar2)
                            .Value = screenType;
 
@@ -247,7 +248,7 @@ namespace CallAuditPortal1.Service
                            .Value = request.ToDate;
 
                         cmd.Parameters.Add("p_pageIndex", OracleDbType.Int32)
-                           .Value = request.Page != null ? request.Page-1 : request.Page;
+                           .Value = request.Page != null ? request.Page - 1 : request.Page;
 
                         cmd.Parameters.Add("p_pageSize", OracleDbType.Int32)
                            .Value = request.Limit;
@@ -264,7 +265,7 @@ namespace CallAuditPortal1.Service
                         await cmd.ExecuteNonQueryAsync();
 
                         OracleRefCursor refCursor = (OracleRefCursor)cmd.Parameters["p_result"].Value;
-                       
+
                         using (OracleDataReader reader = refCursor.GetDataReader())
                         {
                             while (await reader.ReadAsync())
@@ -307,16 +308,16 @@ namespace CallAuditPortal1.Service
                 await con.OpenAsync();
 
                 using (OracleCommand cmd =
-                       new OracleCommand("excel_pkg.verify_reject_uploaded_data", con))
+                       new OracleCommand("CSNET_PLUS.CSNET_PLUS_EXCEL_PKG.VERIFY_REJECT_UPLOADED_DATA", con))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
                     string receiptNos = string.Join(",", request.SelectedIds);
-                    cmd.Parameters.Add("p_session_id",OracleDbType.Varchar2).Value = request.SessionId;
-                    cmd.Parameters.Add("p_audit_type_id",OracleDbType.Int32).Value = request.AuditTypeId;
+                    cmd.Parameters.Add("p_session_id", OracleDbType.Varchar2).Value = request.SessionId;
+                    cmd.Parameters.Add("p_audit_type_id", OracleDbType.Int32).Value = request.AuditTypeId;
                     cmd.Parameters.Add("p_remarks", OracleDbType.Varchar2).Value = null;
-                    cmd.Parameters.Add("p_status",OracleDbType.Varchar2).Value = "PENDING";
-                    cmd.Parameters.Add("p_gsfs_receipt_nos",OracleDbType.Varchar2).Value = receiptNos;
-                    cmd.Parameters.Add("p_msg",OracleDbType.Varchar2,4000).Direction = ParameterDirection.Output;
+                    cmd.Parameters.Add("p_status", OracleDbType.Varchar2).Value = "PENDING";
+                    cmd.Parameters.Add("p_gsfs_receipt_nos", OracleDbType.Varchar2).Value = receiptNos;
+                    cmd.Parameters.Add("p_msg", OracleDbType.Varchar2, 4000).Direction = ParameterDirection.Output;
                     await cmd.ExecuteNonQueryAsync();
                     return cmd.Parameters["p_msg"].Value?.ToString();
                 }
@@ -338,7 +339,8 @@ namespace CallAuditPortal1.Service
                     await con.OpenAsync();
 
                     using (OracleCommand cmd =
-                           new OracleCommand("excel_pkg.verify_reject_uploaded_data", con))
+                           new OracleCommand("CSNET_PLUS.CSNET_PLUS_EXCEL_PKG.VERIFY_REJECT_UPLOADED_DATA", con))
+
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
 
