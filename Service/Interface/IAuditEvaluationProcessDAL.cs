@@ -2,6 +2,6 @@
 {
     public interface IAuditEvaluationProcessDAL
     {
-        Task<List<dynamic>> Get_Evaluation_Data(string receipt_no, int audit_typeId);
+        Task<dynamic> Get_Evaluation_Data(string receipt_no, int audit_typeId);
     }
 }

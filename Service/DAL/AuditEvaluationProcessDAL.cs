@@ -15,11 +15,11 @@ namespace CallAuditPortal1.Service.DAL
             _configuration = configuration;
         }
 
-        public async Task<List<dynamic>> Get_Evaluation_Data(string receipt_no, int audit_typeId)
+        public async Task<dynamic> Get_Evaluation_Data(string receipt_no, int audit_typeId)
         {
             try
             {
-                List<dynamic> data = new List<dynamic>();
+               dynamic data = null;
 
                 using (OracleConnection con = new OracleConnection(_configuration.GetConnectionString("DefaultConnection")))
                 {
@@ -52,7 +52,7 @@ namespace CallAuditPortal1.Service.DAL
                                     );
                                 }
 
-                                data.Add(row);
+                                data = row;
                             }
                         }
 

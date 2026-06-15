@@ -2,6 +2,7 @@
 using CallAuditPortal1.Model.RequestDTO;
 using CallAuditPortal1.Service.BAL;
 using CallAuditPortal1.Service.Interface;
+using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CallAuditPortal1.Controllers
@@ -27,14 +28,21 @@ namespace CallAuditPortal1.Controllers
             }
 
 
-            [HttpGet("DownloadTemplate")]
-            public IActionResult DownloadTemplate()
+            [HttpPost("DownloadTemplate")]
+            public async Task<IActionResult> DownloadTemplate(int AuditType)
             {
                 try
                 {
-                var data = _auditBAL.DownloadTemplate();
+                    var data = await _auditBAL.DownloadTemplate(AuditType);
+                if (data.Item1 == null)
+                {
+                    return NotFound("File Not Found");
+                }
 
-                return Ok(data);
+                return File(data.Item1,
+                    "application/octet-stream",
+                    data.Item2
+                    );
                 }
                 catch (Exception ex)
                 {

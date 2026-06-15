@@ -17,7 +17,7 @@ namespace CallAuditPortal1.Service.DAL
             _configuration = configuration;
         }
 
-        public async Task<string> UploadData(string sessionId, string templateId, string auditDate, string userName)
+        public async Task<string> UploadData(string sessionId, string templateId, string auditData, string userName)
         {
             string connectionString =
                 _configuration.GetConnectionString("DefaultConnection");
@@ -28,19 +28,19 @@ namespace CallAuditPortal1.Service.DAL
                     new OracleConnection(connectionString))
                 {
                     using (OracleCommand cmd =
-                        new OracleCommand("excel_pkg.excel_upld_proc", con))
+                        new OracleCommand("csnet_plus_excel_pkg.csnet_plus_excel_upld_proc", con))
                     {
 
                         cmd.CommandType = CommandType.StoredProcedure;
-                        DateTime parsedDate;
-                        if (string.IsNullOrWhiteSpace(auditDate))
+
+                        if (string.IsNullOrWhiteSpace(auditData))
                         {
                             return "Audit date is required.";
                         }
 
                         cmd.Parameters.Add("p_session", OracleDbType.Varchar2).Value = sessionId;
                         cmd.Parameters.Add("p_template_id", OracleDbType.Int32).Value = Convert.ToInt32(templateId);
-                        cmd.Parameters.Add("p_audit_date", OracleDbType.Varchar2).Value = auditDate.Trim();
+                        cmd.Parameters.Add("p_audit_date", OracleDbType.Varchar2).Value = auditData.Trim();
                         cmd.Parameters.Add("p_user", OracleDbType.Varchar2).Value = userName;
                         OracleParameter statusParam = new OracleParameter("p_status", OracleDbType.Varchar2, 100);
                         statusParam.Direction = ParameterDirection.Output;
@@ -185,7 +185,7 @@ namespace CallAuditPortal1.Service.DAL
                     await con.OpenAsync();
 
                     using (OracleCommand cmd =
-                           new OracleCommand("excel_pkg.verify_reject_uploaded_data", con))
+                           new OracleCommand("csnet_plus_excel_pkg.verify_reject_uploaded_data", con))
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
 
