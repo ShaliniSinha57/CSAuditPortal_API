@@ -11,14 +11,14 @@
         public int? Page { get; set; }
         public int? Limit { get; set; }
     }
+   
 
         public class SubmitBranchRequest
         {
         public int AuditTypeId { get; set; }
         public List<string> GSFS_Receipt_Nos { get; set; }
     }
-
-
+   
     public class Email
     {
         public string To { get; set; }

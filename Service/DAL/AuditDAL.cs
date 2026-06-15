@@ -60,44 +60,39 @@ namespace CallAuditPortal1.Service.DAL
             }
         }
 
-        public List<Dictionary<string, object>> DownloadTemplate()
+        public async Task<string> DownloadTemplate(int auditTypeId)
         {
-            try
+            using OracleConnection con = new OracleConnection(
+                _configuration.GetConnectionString("DefaultConnection"));
+
+            await con.OpenAsync();
+
+            using OracleCommand cmd = new OracleCommand(
+                "CSNET_PLUS.CSNET_PLUS_REPORT_PKG.GET_TEMPLATE_FILE_PATH",
+                con);
+
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.BindByName = true;
+
+            cmd.Parameters.Add("p_audit_type_id", OracleDbType.Int32)
+                          .Value = auditTypeId;
+
+            cmd.Parameters.Add("p_path", OracleDbType.Varchar2, 1000)
+                          .Direction = ParameterDirection.Output;
+
+            cmd.Parameters.Add("p_msg", OracleDbType.Varchar2, 4000)
+                          .Direction = ParameterDirection.Output;
+
+            await cmd.ExecuteNonQueryAsync();
+
+            string message = cmd.Parameters["p_msg"].Value?.ToString();
+
+            if (!string.IsNullOrWhiteSpace(message))
             {
-                DataTable dt = new DataTable();
-
-                OracleParameter[] param = new OracleParameter[1];
-
-                param[0] = new OracleParameter(
-                    "p_result",
-                    OracleDbType.RefCursor);
-
-                param[0].Direction = ParameterDirection.Output;
-
-                dt = _connection.getDataTableStoredProc(
-                    "csnet_plus_master_pkg.get_claim_upload_template",
-                    param);
-
-                var result = new List<Dictionary<string, object>>();
-
-                foreach (DataRow row in dt.Rows)
-                {
-                    var dict = new Dictionary<string, object>();
-
-                    foreach (DataColumn col in dt.Columns)
-                    {
-                        dict[col.ColumnName] = row[col];
-                    }
-
-                    result.Add(dict);
-                }
-
-                return result;
+                throw new Exception(message);
             }
-            catch (Exception)
-            {
-                throw;
-            }
+
+            return cmd.Parameters["p_path"].Value?.ToString();
         }
 
 

@@ -170,6 +170,22 @@ namespace CallAuditPortal1.Service
                 SelectedIds = request.SelectedIds
             });
         }
+        //public string DownloadTemplate(int auditTypeId)
+        //{
+        //    try
+        //    {
+        //        return _dataLoaderDAL.DownloadTemplate(auditTypeId);
+        //    }
+        //    catch (Exception)
+        //    {
+        //        throw;
+        //    }
+        //}
+
+        Task<string> IDataLoaderService.DownloadTemplate(int auditTypeId)
+        {
+            throw new NotImplementedException();
+        }
     }
 
 }

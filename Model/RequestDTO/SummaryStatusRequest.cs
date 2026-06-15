@@ -1,5 +1,7 @@
 ﻿namespace CallAuditPortal1.Model.RequestDTO
 {
+
+    
     public class SummaryStatusRequest
     {
         public string? BranchCode { get; set; }
@@ -12,4 +14,9 @@
 
         public string? LoggedInBranch { get; set; }
     }
+    public class ExportSummaryExcel
+    {
+        public List<string> SelectedIds { get; set; } = new();
+    }
+
 }

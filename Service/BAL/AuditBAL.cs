@@ -24,16 +24,16 @@ namespace CallAuditPortal1.Service.BAL
       }
     }
 
-    public List<Dictionary<string, object>> DownloadTemplate()
-    {
-      try
-      {
-        return _auditDAL.DownloadTemplate();
-      }
-      catch (Exception)
-      {
-        throw;
-      }
+        public async Task<string> DownloadTemplate(int auditTypeId)
+        {
+            try
+            {
+                return await _auditDAL.DownloadTemplate(auditTypeId);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
     }
-  }
 }

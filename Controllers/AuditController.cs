@@ -27,22 +27,44 @@ namespace CallAuditPortal1.Controllers
             }
 
 
-            [HttpGet("DownloadTemplate")]
-            public IActionResult DownloadTemplate()
+           
+        
+        [HttpGet("download-template/{auditTypeId}")]
+        public async Task<IActionResult> DownloadTemplate(int auditTypeId)
+        {
+            try
             {
-                try
-                {
-                var data = _auditBAL.DownloadTemplate();
+                string filePath = await _service.DownloadTemplate(auditTypeId);
 
-                return Ok(data);
-                }
-                catch (Exception ex)
+                if (!System.IO.File.Exists(filePath))
                 {
-                return BadRequest(ex.Message);
+                    return NotFound(new
+                    {
+                        success = false,
+                        message = $"Template file not found at path: {filePath}"
+                    });
                 }
+
+                byte[] fileBytes = System.IO.File.ReadAllBytes(filePath);
+
+                string fileName = Path.GetFileName(filePath);
+
+                return File(
+                    fileBytes,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    fileName);
             }
-    
-            [HttpPost("ProcessUploadData")]
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
+        }
+
+        [HttpPost("ProcessUploadData")]
             public async Task<IActionResult> ProcessUploadData([FromForm] AuditUploadClaimRequest request)
             {
                 try

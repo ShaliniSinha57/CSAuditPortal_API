@@ -9,10 +9,16 @@ using System.Data;
 using System.Net;
 using System.Net.Mail;
 using static Microsoft.AspNetCore.Razor.Language.TagHelperMetadata;
+using OracleCommand = Oracle.ManagedDataAccess.Client.OracleCommand;
+using OracleConnection = Oracle.ManagedDataAccess.Client.OracleConnection;
+using OracleDataAdapter = Oracle.ManagedDataAccess.Client.OracleDataAdapter;
+using OracleParameter = Oracle.ManagedDataAccess.Client.OracleParameter;
+
+
 
 namespace CallAuditPortal1.Service.DAL
 {
-    public class AuditMonitoringDAL:IAuditMonitoringDAL
+    public class AuditMonitoringDAL : IAuditMonitoringDAL
     {
         private readonly IConfiguration _configuration;
         public AuditMonitoringDAL(IConfiguration configuration)
@@ -132,6 +138,7 @@ namespace CallAuditPortal1.Service.DAL
             }
         }
 
+
         public async Task<byte[]> Download(DownloadRequest request)
         {
             using OracleConnection con = new OracleConnection(
@@ -147,7 +154,7 @@ namespace CallAuditPortal1.Service.DAL
 
             await cmd.ExecuteNonQueryAsync();
             var message = cmd.Parameters["p_msg"].Value?.ToString();
-            
+
             OracleRefCursor cursor = (OracleRefCursor)cmd.Parameters["p_result"].Value;
             using OracleDataReader reader = cursor.GetDataReader();
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
@@ -173,9 +180,11 @@ namespace CallAuditPortal1.Service.DAL
                 }
                 row++;
             }
-            worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
-            return package.GetAsByteArray();
+           worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
+           return package.GetAsByteArray();
         }
+
+
     }
 }
 
