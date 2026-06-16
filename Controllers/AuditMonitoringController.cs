@@ -2,6 +2,7 @@
 using CallAuditPortal1.Service.Interface;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Data;
 
 namespace CallAuditPortal1.Controllers
 {
@@ -73,7 +74,7 @@ namespace CallAuditPortal1.Controllers
                 return BadRequest(ex.Message);
             }
         }
-
+       
     }
 
 }

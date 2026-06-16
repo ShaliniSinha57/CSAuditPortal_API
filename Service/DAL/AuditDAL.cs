@@ -83,8 +83,10 @@ namespace CallAuditPortal1.Service.DAL
             }
             catch (Exception)
             {
-                throw;
+                throw new Exception(message);
             }
+
+            return cmd.Parameters["p_path"].Value?.ToString();
         }
 
 

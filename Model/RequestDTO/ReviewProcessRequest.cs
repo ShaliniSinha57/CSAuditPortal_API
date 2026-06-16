@@ -10,7 +10,12 @@
         public int? PageNumber { get; set; }
         public int? PageSize { get; set; }
     }
+    public class ReviewProcessSearchResponse
+    {
+        public int Count { get; set; }
 
+        public List<dynamic> Data { get; set; } = new();
+    }
     public class DownloadReviewProcessRequest
     {
         public List<string> SelectedIds { get; set; }

@@ -1,0 +1,37 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+</head>
+<body>
+    <p style="font-size:16px;"> Dear HO Team Member, </p>
+    <br/>
+    <p> Enclosed find the Data Audit Feedback Result for the <span style="color:red; font-weight:bold;"> "{{AuditMonth}}" </span> month uploaded in Next CS-Net System. 
+        You are requested to check & provide your feedback to the reverted cases. </p>
+    <p style="font-size:18px; font-weight:bold;"> Summary: </p>
+    <br>
+    <table>
+        <thead>
+            <tr>
+                <th align="left"
+                    style="padding: 10px 12px;background: #f1f5f9;border-bottom: 1px solid #e6eef8; font-size: 13px; color: #0b3b66; text-align:left;">
+                   ESC Name
+                </th>
+                <th align="left"
+                    style="padding: 10px 12px;background: #f1f5f9;border-bottom: 1px solid #e6eef8; font-size: 13px; color: #0b3b66; text-align:left;">
+                    Audit Head
+                </th>
+                <th align="left"
+                    style="padding: 10px 12px;background: #f1f5f9;border-bottom: 1px solid #e6eef8; font-size: 13px; color: #0b3b66; text-align:left;">
+                    Feedback Submit Count
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            {{TableRows}}
+        </tbody>
+    </table>
+
+</body>
+</html>

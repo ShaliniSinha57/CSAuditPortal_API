@@ -24,9 +24,10 @@ namespace CallAuditPortal1.Service.DAL
                 using (OracleConnection con = new OracleConnection(_configuration.GetConnectionString("DefaultConnection")))
                 {
                     await con.OpenAsync();
-                    using (OracleCommand cmd = new OracleCommand("CSNET_PLUS_REPORT_PKG.get_evaluation_process", con))
+                    using (OracleCommand cmd = new OracleCommand("CSNET_PLUS.CSNET_PLUS_REPORT_PKG.get_evaluation_process", con))
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.BindByName = true;
                         cmd.Parameters.Add("p_gsfs_receipt_no", OracleDbType.Varchar2).Value = receipt_no;
                         cmd.Parameters.Add("p_audit_type_id", OracleDbType.Int32).Value = audit_typeId;
 
@@ -34,6 +35,17 @@ namespace CallAuditPortal1.Service.DAL
                         cmd.Parameters.Add("p_result", OracleDbType.RefCursor).Direction = ParameterDirection.Output;
 
                         await cmd.ExecuteNonQueryAsync();
+                        string errMsg = cmd.Parameters["p_msg"].Value?.ToString();
+
+                        if (!string.IsNullOrEmpty(errMsg) && errMsg != "SUCCESS")
+                        {
+                            throw new Exception(errMsg);
+                        }
+
+                        if (cmd.Parameters["p_result"].Value == DBNull.Value)
+                        {
+                            throw new Exception("No cursor returned from procedure.");
+                        }
                         OracleRefCursor refCursor = (OracleRefCursor)cmd.Parameters["p_result"].Value;
 
                         using (OracleDataReader reader = refCursor.GetDataReader())
@@ -56,7 +68,7 @@ namespace CallAuditPortal1.Service.DAL
                             }
                         }
 
-                        string errMsg = cmd.Parameters["p_msg"].Value?.ToString();
+                        errMsg = cmd.Parameters["p_msg"].Value?.ToString();
 
                         return data;
                     }
