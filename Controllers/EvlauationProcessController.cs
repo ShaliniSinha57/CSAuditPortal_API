@@ -1,6 +1,7 @@
 ﻿using CallAuditPortal1.Service.Interface;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using static CallAuditPortal1.Model.RequestDTO.EvaluationProcessRequest;
 
 namespace CallAuditPortal1.Controllers
 {
@@ -23,6 +24,24 @@ namespace CallAuditPortal1.Controllers
                 {
                     success = "Success",
                     data
+                });
+            }catch(Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPost("save-feedback")]
+        public async Task<IActionResult> SaveFeedback([FromBody] SaveFeedbackRequest request)
+        {
+            try
+            {
+                var response = await _services.SaveFeedbackStatus(request);
+
+                return Ok(new
+                {
+                    status = "success",
+                    response
                 });
             }catch(Exception ex)
             {
