@@ -2,6 +2,7 @@
 using CallAuditPortal1.Model.RequestDTO;
 using CallAuditPortal1.Service.BAL;
 using CallAuditPortal1.Service.Interface;
+using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CallAuditPortal1.Controllers
@@ -27,44 +28,29 @@ namespace CallAuditPortal1.Controllers
             }
 
 
-           
-        
-        [HttpGet("download-template/{auditTypeId}")]
-        public async Task<IActionResult> DownloadTemplate(int auditTypeId)
-        {
-            try
+            [HttpPost("DownloadTemplate")]
+            public async Task<IActionResult> DownloadTemplate(int AuditType)
             {
-                string filePath = await _service.DownloadTemplate(auditTypeId);
-
-                if (!System.IO.File.Exists(filePath))
+                try
                 {
-                    return NotFound(new
-                    {
-                        success = false,
-                        message = $"Template file not found at path: {filePath}"
-                    });
+                    var data = await _auditBAL.DownloadTemplate(AuditType);
+                if (data.Item1 == null)
+                {
+                    return NotFound("File Not Found");
                 }
 
-                byte[] fileBytes = System.IO.File.ReadAllBytes(filePath);
-
-                string fileName = Path.GetFileName(filePath);
-
-                return File(
-                    fileBytes,
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    fileName);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
+                return File(data.Item1,
+                    "application/octet-stream",
+                    data.Item2
+                    );
+                }
+                catch (Exception ex)
                 {
-                    success = false,
-                    message = ex.Message
-                });
+                return BadRequest(ex.Message);
+                }
             }
-        }
-
-        [HttpPost("ProcessUploadData")]
+    
+            [HttpPost("ProcessUploadData")]
             public async Task<IActionResult> ProcessUploadData([FromForm] AuditUploadClaimRequest request)
             {
                 try

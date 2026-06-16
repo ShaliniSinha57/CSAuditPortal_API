@@ -69,25 +69,17 @@ namespace CallAuditPortal1.Service
                                 columns.Add("CREATED_BY");
                                 values.Add(":CREATED_BY");
                                 insertCmd.Parameters.Add("CREATED_BY", OracleDbType.Varchar2).Value = "SYSTEM_USER";
-                                columns.Add("ATTRIBUTE104");
-                                values.Add(":AUDIT_DATE");
+                                //columns.Add("ATTRIBUTE104");
+                                //values.Add(":AUDIT_DATE");
 
-                                DateTime parsedAuditDate = DateTime.Parse(request.FromDate);
+                                //DateTime parsedAuditDate = DateTime.Parse(request.FromDate);
 
-                                insertCmd.Parameters.Add("AUDIT_DATE", OracleDbType.Varchar2)
-                                         .Value = request.FromDate;
+                                //insertCmd.Parameters.Add("AUDIT_DATE", OracleDbType.Varchar2)
+                                //         .Value = request.FromDate;
                                 int attributeIndex = 3;
 
                                 for (int col = 1; col <= colCount; col++)
                                 {
-                                    // IMPORTANT
-                                    // Skip ATTRIBUTE104 because it already contains AUDIT_DATE
-
-                                    if (attributeIndex == 104)
-                                    {
-                                        attributeIndex++;
-                                    }
-
                                     if (attributeIndex > 150)
                                     {
                                         break;
