@@ -1,12 +1,8 @@
 using CallAuditPortal1.Model.RequestDTO;
-using CallAuditPortal1.Model.ResponseDTO;
 using CallAuditPortal1.Service.Interface;
-using DocumentFormat.OpenXml.Office.Word;
 using OfficeOpenXml;
 using Oracle.ManagedDataAccess.Client;
-using Oracle.ManagedDataAccess.Types;
 using System.Data;
-using System.Dynamic;
 
 namespace CallAuditPortal1.Service
 {
@@ -50,73 +46,80 @@ namespace CallAuditPortal1.Service
                         }
                         int rowCount = worksheet.Dimension.Rows;
                         int colCount = Math.Min(worksheet.Dimension.Columns, 148);
+                        DataTable dt = new DataTable();
+
+                        dt.Columns.Add("ATTRIBUTE1");
+                        dt.Columns.Add("ATTRIBUTE2");
+                        dt.Columns.Add("CREATION_DATE", typeof(DateTime));
+                        dt.Columns.Add("CREATED_BY");
+
+                        for (int i = 3; i <= 150; i++)
+                        {
+                            dt.Columns.Add($"ATTRIBUTE{i}");
+                        }
                         for (int row = 2; row <= rowCount; row++)
                         {
-                            List<string> columns = new List<string>();
-                            List<string> values = new List<string>();
-                            using (OracleCommand insertCmd = new OracleCommand())
+                            DataRow dr = dt.NewRow();
+
+                            dr["ATTRIBUTE1"] = sessionId;
+                            dr["ATTRIBUTE2"] = request.AuditTypeId;
+                            dr["CREATION_DATE"] = DateTime.Now;
+                            dr["CREATED_BY"] = "SYSTEM_USER";
+
+                            int attributeIndex = 3;
+
+                            for (int col = 1; col <= colCount; col++)
                             {
-                                insertCmd.Connection = con;
-                                insertCmd.BindByName = true;
-                                columns.Add("ATTRIBUTE1");
-                                values.Add(":SESSION_ID");
-                                insertCmd.Parameters.Add("SESSION_ID", OracleDbType.Varchar2).Value = sessionId;
-                                columns.Add("ATTRIBUTE2");
-                                values.Add(":TEMPLATE_ID");
-                                insertCmd.Parameters.Add("TEMPLATE_ID", OracleDbType.Varchar2).Value = request.AuditTypeId;
-                                columns.Add("CREATION_DATE");
-                                values.Add("SYSDATE");
-                                columns.Add("CREATED_BY");
-                                values.Add(":CREATED_BY");
-                                insertCmd.Parameters.Add("CREATED_BY", OracleDbType.Varchar2).Value = "SYSTEM_USER";
-                                //columns.Add("ATTRIBUTE104");
-                                //values.Add(":AUDIT_DATE");
 
-                                //DateTime parsedAuditDate = DateTime.Parse(request.FromDate);
-
-                                //insertCmd.Parameters.Add("AUDIT_DATE", OracleDbType.Varchar2)
-                                //         .Value = request.FromDate;
-                                int attributeIndex = 3;
-
-                                for (int col = 1; col <= colCount; col++)
+                                if (attributeIndex > 150)
                                 {
-                                    if (attributeIndex > 150)
+                                    break;
+                                }
+                                string value = worksheet.Cells[row, col].Text?.Trim();
+
+                                dr[$"ATTRIBUTE{attributeIndex}"] =
+                                    string.IsNullOrWhiteSpace(value)
+                                        ? DBNull.Value
+                                        : (object)value;
+
+                                attributeIndex++;
+                            }
+                            dt.Rows.Add(dr);
+                           
+                        }
+                        using(OracleTransaction trans = con.BeginTransaction())
+                        {
+                            try
+                            {
+                                using (OracleBulkCopy bulkCopy = new OracleBulkCopy(con))
+                                {
+                                    bulkCopy.DestinationTableName = "CSNET_PLUS_INTERFACE_ALL";
+
+                                    bulkCopy.BatchSize = 1000;
+                                    bulkCopy.BulkCopyTimeout = 0;
+                                    bulkCopy.ColumnMappings.Add("ATTRIBUTE1", "ATTRIBUTE1");
+                                    bulkCopy.ColumnMappings.Add("ATTRIBUTE2", "ATTRIBUTE2");
+                                    bulkCopy.ColumnMappings.Add("CREATION_DATE", "CREATION_DATE");
+                                    bulkCopy.ColumnMappings.Add("CREATED_BY", "CREATED_BY");
+
+                                    for (int i = 3; i <= 150; i++)
                                     {
-                                        break;
+                                        bulkCopy.ColumnMappings.Add(
+                                            $"ATTRIBUTE{i}",
+                                            $"ATTRIBUTE{i}");
                                     }
 
-                                    string attributeName = $"ATTRIBUTE{attributeIndex}";
-                                    string parameterName = $"COL{col}";
-
-                                    columns.Add(attributeName);
-                                    values.Add($":{parameterName}");
-
-                                    string cellValue =
-                                        worksheet.Cells[row, col].Text?.Trim();
-
-                                    insertCmd.Parameters.Add(
-                                        parameterName,
-                                        OracleDbType.Varchar2
-                                    ).Value =
-                                        string.IsNullOrWhiteSpace(cellValue)
-                                        ? DBNull.Value
-                                        : cellValue;
-
-                                    attributeIndex++;
+                                    bulkCopy.WriteToServer(dt);
                                 }
-                                string insertQuery = $@"INSERT INTO CSNET_PLUS_INTERFACE_ALL
-                            (
-                                {string.Join(",", columns)}
-                            )
-                            VALUES
-                            (
-                                {string.Join(",", values)}
-                            )";
-                                Console.WriteLine(insertQuery);
-                                insertCmd.CommandText = insertQuery;
-                                await insertCmd.ExecuteNonQueryAsync();
+                                trans.Commit();
+                            }
+                            catch
+                            {
+                                trans.Rollback();
+                                throw;
                             }
                         }
+                        
                     }
                     var uploadProcess = await _dataLoaderDAL.UploadData(sessionId, request.AuditTypeId, request.FromDate, "System_user");
                     //return
