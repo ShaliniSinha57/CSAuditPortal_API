@@ -3,6 +3,7 @@ using CallAuditPortal1.Service.Interface;
 using OfficeOpenXml;
 using Oracle.ManagedDataAccess.Client;
 using System.Data;
+using System.Diagnostics;
 
 namespace CallAuditPortal1.Service
 {
@@ -121,7 +122,9 @@ namespace CallAuditPortal1.Service
                         }
                         
                     }
+
                     var uploadProcess = await _dataLoaderDAL.UploadData(sessionId, request.AuditTypeId, request.FromDate, "System_user");
+
                     //return
                     //    $"Data inserted successfully. Session ID : {sessionId}";
                     if (!string.IsNullOrEmpty(uploadProcess))

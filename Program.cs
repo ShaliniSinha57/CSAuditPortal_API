@@ -28,12 +28,8 @@ builder.Services.AddScoped<IAuditMonitoringDAL, AuditMonitoringDAL>();
 builder.Services.AddScoped<IAuditMonitoringService, AuditMonitoringService>();
 builder.Services.AddScoped<IReviewProcessDAL, ReviewProcessDAL>();
 builder.Services.AddScoped<IAuditEvaluationProcessDAL, AuditEvaluationProcessDAL>();
+builder.Services.AddScoped<IFileUploadBAL, FileUploadBAL>();
 builder.Services.AddScoped<IReportDAL,ReportDAL>();
-
-
-
-
-
 
 
 builder.Services.AddDbContext<DbContext>(options =>
