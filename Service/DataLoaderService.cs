@@ -3,76 +3,20 @@ using CallAuditPortal1.Service.Interface;
 using OfficeOpenXml;
 using Oracle.ManagedDataAccess.Client;
 using System.Data;
-using System.Dynamic;
+using System.Diagnostics;
 
 namespace CallAuditPortal1.Service
 {
     public class DataLoaderService : IDataLoaderService
     {
         private readonly IConfiguration _configuration;
-
-        public DataLoaderService(IConfiguration configuration)
+        private readonly IDataLoaderDAL _dataLoaderDAL;
+        public DataLoaderService(IConfiguration configuration, IDataLoaderDAL dataLoaderDAL)
         {
             _configuration = configuration;
+            _dataLoaderDAL = dataLoaderDAL;
         }
-        public async Task<string> UploadData(string sessionId, string templateId, string auditDate, string userName)
-        {
-            string connectionString =
-                _configuration.GetConnectionString("DefaultConnection");
-
-            try
-            {
-                using (OracleConnection con =
-                    new OracleConnection(connectionString))
-                {
-                    using (OracleCommand cmd =
-                        new OracleCommand("csnet_plus_excel_pkg.csnet_plus_excel_upld_proc", con))
-                    {
-
-                        cmd.CommandType = CommandType.StoredProcedure;
-                        DateTime parsedDate;
-                        if (!DateTime.TryParse(auditDate, out parsedDate))
-                        {
-                            return "Invalid audit date format.";
-                        }
-                        cmd.Parameters.Add("p_session", OracleDbType.Varchar2).Value = sessionId;
-                        cmd.Parameters.Add("p_template_id", OracleDbType.Int32).Value = Convert.ToInt32(templateId);
-                        cmd.Parameters.Add("p_audit_date", OracleDbType.Date).Value = parsedDate;
-                        cmd.Parameters.Add("p_user", OracleDbType.Varchar2).Value = userName;
-                        OracleParameter statusParam = new OracleParameter("p_status", OracleDbType.Varchar2, 100);
-                        statusParam.Direction = ParameterDirection.Output;
-                        cmd.Parameters.Add(statusParam);
-                        OracleParameter insertedParam = new OracleParameter("p_inserted", OracleDbType.Int32);
-                        insertedParam.Direction = ParameterDirection.Output;
-                        cmd.Parameters.Add(insertedParam);
-                        OracleParameter updatedParam = new OracleParameter("p_updated", OracleDbType.Int32);
-                        updatedParam.Direction = ParameterDirection.Output;
-                        cmd.Parameters.Add(updatedParam);
-                        OracleParameter errorParam = new OracleParameter("p_errors", OracleDbType.Int32);
-                        errorParam.Direction = ParameterDirection.Output;
-
-                        cmd.Parameters.Add(errorParam);
-                        await con.OpenAsync();
-                        await cmd.ExecuteNonQueryAsync();
-                        string status = statusParam.Value?.ToString();
-                        string inserted = insertedParam.Value?.ToString();
-                        string updated = updatedParam.Value?.ToString();
-                        string errors = errorParam.Value?.ToString();
-                        return
-                            $"Status : {status}\n" +
-                            $"Inserted : {inserted}\n" +
-                            $"Updated : {updated}\n" +
-                            $"Errors : {errors}";
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                return ex.Message;
-            }
-        }
-
-        public async Task<string> InsertDataIntoTempTable(string fullPath, string auditType, string auditDate)
+        public async Task<(string result, string session_Id)> InsertDataIntoTempTable(AuditUploadClaimRequest request)
         {
             try
             {
@@ -85,213 +29,161 @@ namespace CallAuditPortal1.Service
                     using (OracleCommand cmd = new OracleCommand(query, con))
                     {
                         sessionId = Convert.ToString(await cmd.ExecuteScalarAsync());
-
+                        string sessionid = sessionId;
                     }
 
                     ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-                    using (var package = new ExcelPackage(new FileInfo(fullPath)))
+                    using var stream = request.File.OpenReadStream();
+                    using (var package = new ExcelPackage(stream))
                     {
                         ExcelWorksheet worksheet = package.Workbook.Worksheets[0];
                         if (worksheet == null)
                         {
-                            return "Worksheet not found.";
+                            return ("Worksheet not found.", "");
                         }
                         if (worksheet.Dimension == null)
                         {
-                            return "Excel sheet is empty.";
+                            return ("Excel sheet is empty.", "");
                         }
                         int rowCount = worksheet.Dimension.Rows;
                         int colCount = Math.Min(worksheet.Dimension.Columns, 148);
+                        DataTable dt = new DataTable();
+
+                        dt.Columns.Add("ATTRIBUTE1");
+                        dt.Columns.Add("ATTRIBUTE2");
+                        dt.Columns.Add("CREATION_DATE", typeof(DateTime));
+                        dt.Columns.Add("CREATED_BY");
+
+                        for (int i = 3; i <= 150; i++)
+                        {
+                            dt.Columns.Add($"ATTRIBUTE{i}");
+                        }
                         for (int row = 2; row <= rowCount; row++)
                         {
-                            List<string> columns = new List<string>();
-                            List<string> values = new List<string>();
-                            using (OracleCommand insertCmd = new OracleCommand())
+                            DataRow dr = dt.NewRow();
+
+                            dr["ATTRIBUTE1"] = sessionId;
+                            dr["ATTRIBUTE2"] = request.AuditTypeId;
+                            dr["CREATION_DATE"] = DateTime.Now;
+                            dr["CREATED_BY"] = "SYSTEM_USER";
+
+                            int attributeIndex = 3;
+
+                            for (int col = 1; col <= colCount; col++)
                             {
-                                insertCmd.Connection = con;
-                                insertCmd.BindByName = true;
-                                columns.Add("ATTRIBUTE1");
-                                values.Add(":SESSION_ID");
-                                insertCmd.Parameters.Add("SESSION_ID", OracleDbType.Varchar2).Value = sessionId;
-                                columns.Add("ATTRIBUTE2");
-                                values.Add(":TEMPLATE_ID");
-                                insertCmd.Parameters.Add("TEMPLATE_ID", OracleDbType.Varchar2).Value = auditType;
-                                columns.Add("CREATION_DATE");
-                                values.Add("SYSDATE");
-                                columns.Add("CREATED_BY");
-                                values.Add(":CREATED_BY");
-                                insertCmd.Parameters.Add("CREATED_BY", OracleDbType.Varchar2).Value = "SYSTEM_USER";
-                                columns.Add("ATTRIBUTE104");
-                                values.Add(":AUDIT_DATE");
-                                DateTime parsedAuditDate = DateTime.Parse(auditDate);
-                                insertCmd.Parameters.Add("AUDIT_DATE", OracleDbType.Date).Value = parsedAuditDate;
-                                int attributeIndex = 3;
 
-                                for (int col = 1; col <= colCount; col++)
+                                if (attributeIndex > 150)
                                 {
-                                    // IMPORTANT
-                                    // Skip ATTRIBUTE104 because it already contains AUDIT_DATE
-
-                                    if (attributeIndex == 104)
-                                    {
-                                        attributeIndex++;
-                                    }
-
-                                    if (attributeIndex > 150)
-                                    {
-                                        break;
-                                    }
-
-                                    string attributeName = $"ATTRIBUTE{attributeIndex}";
-                                    string parameterName = $"COL{col}";
-
-                                    columns.Add(attributeName);
-                                    values.Add($":{parameterName}");
-
-                                    string cellValue =
-                                        worksheet.Cells[row, col].Text?.Trim();
-
-                                    insertCmd.Parameters.Add(
-                                        parameterName,
-                                        OracleDbType.Varchar2
-                                    ).Value =
-                                        string.IsNullOrWhiteSpace(cellValue)
-                                        ? DBNull.Value
-                                        : cellValue;
-
-                                    attributeIndex++;
+                                    break;
                                 }
-                                string insertQuery = $@"INSERT INTO CSNET_PLUS_INTERFACE_ALL
-                            (
-                                {string.Join(",", columns)}
-                            )
-                            VALUES
-                            (
-                                {string.Join(",", values)}
-                            )";
-                                Console.WriteLine(insertQuery);
-                                insertCmd.CommandText = insertQuery;
-                                await insertCmd.ExecuteNonQueryAsync();
+                                string value = worksheet.Cells[row, col].Text?.Trim();
+
+                                dr[$"ATTRIBUTE{attributeIndex}"] =
+                                    string.IsNullOrWhiteSpace(value)
+                                        ? DBNull.Value
+                                        : (object)value;
+
+                                attributeIndex++;
+                            }
+                            dt.Rows.Add(dr);
+                           
+                        }
+                        using(OracleTransaction trans = con.BeginTransaction())
+                        {
+                            try
+                            {
+                                using (OracleBulkCopy bulkCopy = new OracleBulkCopy(con))
+                                {
+                                    bulkCopy.DestinationTableName = "CSNET_PLUS_INTERFACE_ALL";
+
+                                    bulkCopy.BatchSize = 1000;
+                                    bulkCopy.BulkCopyTimeout = 0;
+                                    bulkCopy.ColumnMappings.Add("ATTRIBUTE1", "ATTRIBUTE1");
+                                    bulkCopy.ColumnMappings.Add("ATTRIBUTE2", "ATTRIBUTE2");
+                                    bulkCopy.ColumnMappings.Add("CREATION_DATE", "CREATION_DATE");
+                                    bulkCopy.ColumnMappings.Add("CREATED_BY", "CREATED_BY");
+
+                                    for (int i = 3; i <= 150; i++)
+                                    {
+                                        bulkCopy.ColumnMappings.Add(
+                                            $"ATTRIBUTE{i}",
+                                            $"ATTRIBUTE{i}");
+                                    }
+
+                                    bulkCopy.WriteToServer(dt);
+                                }
+                                trans.Commit();
+                            }
+                            catch
+                            {
+                                trans.Rollback();
+                                throw;
                             }
                         }
+                        
                     }
-                    var uploadProcess = await UploadData(sessionId, auditType, auditDate, "System_user");
+
+                    var uploadProcess = await _dataLoaderDAL.UploadData(sessionId, request.AuditTypeId, request.FromDate, "System_user");
+
                     //return
                     //    $"Data inserted successfully. Session ID : {sessionId}";
                     if (!string.IsNullOrEmpty(uploadProcess))
                     {
-                        return uploadProcess;
+                        return (uploadProcess, sessionId);
                     }
                     else
                     {
                         return
-                            $"Data inserted successfully. Session ID : {sessionId}";
+                            ($"Data inserted successfully. Session ID : {sessionId}", "");
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return $"Error while inserting data : {ex.Message}";
+                throw;
             }
         }
-
-        public async Task<List<dynamic>> VerifyUpload(string sessionId,string templateId)
+        public async Task<(int TotalData, List<dynamic>)> SearchAuditData(AuditSearchRequest request)
         {
-            List<dynamic> data = new List<dynamic>();
-
-            using (OracleConnection con = new OracleConnection(
-                    _configuration.GetConnectionString("DefaultConnection")))
-            {
-                await con.OpenAsync();
-
-                string query = @"";
-
-                using (OracleCommand cmd =
-                       new OracleCommand(query, con))
-                {
-                    cmd.Parameters.Add("sessionId",
-                        OracleDbType.Varchar2).Value = sessionId;
-
-                    cmd.Parameters.Add("templateId",
-                        OracleDbType.Varchar2).Value = templateId;
-
-                    using (OracleDataReader reader =
-                           await cmd.ExecuteReaderAsync())
-                    {
-                        while (await reader.ReadAsync())
-                        {
-                            var row = new ExpandoObject()
-                                      as IDictionary<string, object>;
-
-                            for (int i = 0; i < reader.FieldCount; i++)
-                            {
-                                row.Add(
-                                    reader.GetName(i),
-                                    reader.IsDBNull(i)
-                                    ? null
-                                    : reader.GetValue(i));
-                            }
-
-                            data.Add(row);
-                        }
-                    }
-                }
-            }
-
-            return data;
+            return await _dataLoaderDAL.SearchAuditData(request);
         }
-
-
         public async Task<string> SaveStatus(SaveStatusRequest request)
         {
-            using (OracleConnection con = new OracleConnection(
-                    _configuration.GetConnectionString("DefaultConnection")))
+            return await _dataLoaderDAL.UpdateStatus(new UpdateUploadedDataRequest
             {
-                await con.OpenAsync();
-
-                string query = @"";
-
-                using (OracleCommand cmd =
-                       new OracleCommand(query, con))
-                {
-                    cmd.Parameters.Add("statue",
-                        OracleDbType.Varchar2).Value = request.Status;
-
-                    cmd.Parameters.Add("targetedIds",
-                        OracleDbType.Varchar2).Value = request.SelectedIds.ToString();
-                    await cmd.ExecuteReaderAsync();
-
-                    return "";
-
-                    
-                }
-            }
-            
+                SessionId = request.SessionId,
+                AuditTypeId = request.AuditTypeId,
+                Status = request.Status,
+                SelectedIds = request.SelectedIds
+            });
         }
-
         public async Task<string> RejectStatus(RejectUploadedDataRequest request)
         {
-            using (OracleConnection con = new OracleConnection(
-                    _configuration.GetConnectionString("DefaultConnection")))
+            return await _dataLoaderDAL.UpdateStatus(new UpdateUploadedDataRequest
             {
-                await con.OpenAsync();
-
-                string query = @"";
-
-                using (OracleCommand cmd =
-                       new OracleCommand(query, con))
-                {
-                    cmd.Parameters.Add("message",
-                        OracleDbType.Varchar2).Value = request.Reason;
-
-                    cmd.Parameters.Add("ids",
-                        OracleDbType.Varchar2).Value = request.SelectedIds.ToString();
-
-                    return "";
-                    
-                }
-            }
+                SessionId = request.SessionId,
+                AuditTypeId = request.AuditTypeId,
+                Status = request.Status,
+                Reason = request.Reason,
+                SelectedIds = request.SelectedIds
+            });
         }
+        //public string DownloadTemplate(int auditTypeId)
+        //{
+        //    try
+        //    {
+        //        return _dataLoaderDAL.DownloadTemplate(auditTypeId);
+        //    }
+        //    catch (Exception)
+        //    {
+        //        throw;
+        //    }
+        //}
 
+        Task<string> IDataLoaderService.DownloadTemplate(int auditTypeId)
+        {
+            throw new NotImplementedException();
+        }
     }
+
 }

@@ -1,0 +1,48 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+</head>
+<body>
+    <p> Dear Service Partner <span style="color: red;"> ({{ShipToCode}}) </span>, </p>
+
+    <br />
+    Enclose find the Data Audit Result for the {{Audit Month}} Month uploaded in next CS-Net System.You are requested to check 
+    and provide your feedback to the uploaded cases accordingly within the due date.
+    <br/>
+    You will be provided Overall 20 days and max 3 chances to respond for cases as visible in system.Also you are requested to accept 
+    the Fake/wrong cases in system. so that in future corrective action can be taken by you post Self-introspection.
+    <br/>
+    Last Date to revert on New Upload Claims:
+    <span style="color: red; font-weight: bold;"> {{LastDate}} </span>
+    <br/>
+    <p style="font-size:18px; font-weight:bold;"> Summary: </p>
+    <br>
+    <table>
+        <thead>
+            <tr>
+                <th align="left"
+                    style="padding: 10px 12px;background: #f1f5f9;border-bottom: 1px solid #e6eef8; font-size: 13px; color: #0b3b66; text-align:left;">
+                    Audit Head
+                </th>
+                <th align="left"
+                    style="padding: 10px 12px;background: #f1f5f9;border-bottom: 1px solid #e6eef8; font-size: 13px; color: #0b3b66; text-align:left;">
+                    New Upload
+                </th>
+                <th align="left"
+                    style="padding: 10px 12px;background: #f1f5f9;border-bottom: 1px solid #e6eef8; font-size: 13px; color: #0b3b66; text-align:left;">
+                    Previous Pending
+                </th>
+                <th align="left"
+                    style="padding: 10px 12px;background: #f1f5f9;border-bottom: 1px solid #e6eef8; font-size: 13px; color: #0b3b66; text-align:left;">
+                   Total
+                </th>
+            </tr>
+        </thead>
+        <tbody> 
+            {{TableRows}}
+         </tbody>
+    </table>
+</body>
+</html>
