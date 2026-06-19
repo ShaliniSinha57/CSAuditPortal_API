@@ -1,4 +1,5 @@
-﻿using CallAuditPortal1.Model.RequestDTO;
+﻿using CallAuditPortal1.Model;
+using CallAuditPortal1.Model.RequestDTO;
 using CallAuditPortal1.Model.ResponseDTO;
 using CallAuditPortal1.Service.Interface;
 using Oracle.ManagedDataAccess.Client;
@@ -81,6 +82,54 @@ namespace CallAuditPortal1.Service.DAL
             catch (Exception ex)
             {
                 return ex.Message;
+            }
+        }
+
+        public async Task<List<Template_Columns>> FetchTemplateColumnsAsync(int templateId)
+        {
+            try
+            {
+                List<Template_Columns> columns = new List<Template_Columns>();
+                using(OracleConnection con = new OracleConnection(_configuration.GetConnectionString("DefaultConnection")))
+                {
+                    await con.OpenAsync();
+                    using(OracleCommand cmd = new OracleCommand("PKG_TEMPLATE_UPLOAD.PROC_EXCEL_TEMPLATE_INFO", con))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.Add("P_TEMPLATE_ID", OracleDbType.Int32).Value = templateId;
+
+                        // Output Parameters
+
+                        cmd.Parameters.Add("P_EXC_TEMP", OracleDbType.RefCursor).Direction = ParameterDirection.Output;
+                        cmd.Parameters.Add("P_STATUS_FLAG", OracleDbType.Int32).Direction = ParameterDirection.Output;
+                        cmd.Parameters.Add("P_STATUS_MSG", OracleDbType.Varchar2, 4000).Direction = ParameterDirection.Output;
+
+                        await cmd.ExecuteNonQueryAsync();
+
+                        OracleRefCursor refCurs = (OracleRefCursor)cmd.Parameters["P_EXC_TEMP"].Value;
+                        using (OracleDataReader reader = refCurs.GetDataReader())
+                        {
+                            if (reader.HasRows)
+                            {
+                                while (await reader.ReadAsync())
+                                {
+                                    columns.Add(new Template_Columns
+                                    {
+                                        EXCEL_COLUMN_NO = reader["EXCEL_COLUMN_NO"] != DBNull.Value ? Convert.ToInt32(reader["EXCEL_COLUMN_NO"]) : 0,
+                                        EXCEL_COLUMN_NAME = reader["EXCEL_COLUMN_NAME"].ToString(),
+                                        DB_COLUMN = reader["DB_COLUMN"].ToString(),
+                                        STG_TABLE = reader["STG_TABLE"].ToString()
+                                    });
+                                }
+                            }
+                        }
+                        return columns;
+                    }
+                }
+            }
+            catch
+            {
+                throw;
             }
         }
 

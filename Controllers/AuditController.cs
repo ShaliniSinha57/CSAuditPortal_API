@@ -40,8 +40,8 @@ namespace CallAuditPortal1.Controllers
                 }
 
                 return File(data.Item1,
-                    "application/octet-stream",
-                    data.Item2
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    $"{data.Item2}.xlsx"
                     );
                 }
                 catch (Exception ex)
