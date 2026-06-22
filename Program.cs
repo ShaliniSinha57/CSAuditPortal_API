@@ -3,8 +3,8 @@ using CallAuditPortal1.Service;
 using CallAuditPortal1.Service.BAL;
 using CallAuditPortal1.Service.DAL;
 using CallAuditPortal1.Service.Interface;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
-using Quartz;
 using Oracle.ManagedDataAccess.Client;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -30,12 +30,20 @@ builder.Services.AddScoped<IAuditEvaluationProcessDAL, AuditEvaluationProcessDAL
 builder.Services.AddScoped<IFileUploadBAL, FileUploadBAL>();
 builder.Services.AddScoped<IReportDAL,ReportDAL>();
 
-
 builder.Services.AddDbContext<DbContext>(options =>
 {
   options.UseOracle(builder.Configuration.GetConnectionString("OracleConnection"));
 });
 
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 100 * 1024 * 1024; // 100 MB
+});
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 100 * 1024 * 1024; // 100 MB
+});
 // Add Swagger services
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

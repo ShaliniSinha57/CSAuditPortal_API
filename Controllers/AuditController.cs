@@ -51,6 +51,8 @@ namespace CallAuditPortal1.Controllers
             }
     
             [HttpPost("ProcessUploadData")]
+            [RequestSizeLimit(100_000_000)]
+            [RequestFormLimits(MultipartBodyLengthLimit = 100_000_000)]
             public async Task<IActionResult> ProcessUploadData([FromForm] AuditUploadClaimRequest request)
             {
                 try

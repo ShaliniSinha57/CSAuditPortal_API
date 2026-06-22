@@ -138,7 +138,7 @@ namespace CallAuditPortal1.Service
 
                     sw.Stop();
 
-                    Console.WriteLine("staging table insertion time", sw.Elapsed());
+                    Console.WriteLine($"staging table insertion time: {sw.Elapsed.TotalSeconds} seconds");
 
                     var uploadProcess = await _dataLoaderDAL.UploadData(sessionId, request.AuditTypeId, request.FromDate, "System_user");
 
