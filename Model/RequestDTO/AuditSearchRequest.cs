@@ -16,7 +16,8 @@
         public class SubmitBranchRequest
         {
         public int AuditTypeId { get; set; }
-        public List<string> GSFS_Receipt_Nos { get; set; }
+        //public List<string> GSFS_Receipt_Nos { get; set; }
+        public List<string> GSFS_Receipt_Nos { get; set; } = new();
     }
    
     public class Email
@@ -35,7 +36,22 @@
 
         public List<string> Attachments { get; set; } = new();
     }
+    public class SmtpSettings
+    {
+        public string Host { get; set; } = string.Empty;
+        public int Port { get; set; }
+        public string UserName { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+        public bool EnableSsl { get; set; }
+        public string FromEmail { get; set; } = string.Empty;
+        public string DisplayName { get; set; } = string.Empty;
+    }
 
+    public class MailResponse
+    {
+        public bool Success { get; set; }
+        public string SuccessDetails { get; set; }
+    }
     public class RejectRequest
     {
         public int AuditTypeId { get; set; }

@@ -45,76 +45,114 @@ namespace CallAuditPortal1.Service.DAL
 
             }
         }
-        public static void SendingEmail(Email email, IConfiguration configuration)
+        public string SubmitToBranchSendEmail(string recepeNo, out string FromEmail, out string toEmail, out string CcEmail, out string subject, out string header, out string footer, out string attachementFile)
         {
-            try
+            using (OracleConnection con = new OracleConnection(_configuration.GetConnectionString("DefaultConnection")))
             {
-                string eMailServer = configuration["EmailServer"];
-
-                string eMailSender =
-                    string.IsNullOrWhiteSpace(email.From)
-                    ? configuration["EmailSupport"]
-                    : email.From;
-
-                using (MailMessage mailMsg = new MailMessage())
+                con.Open();
+                using (OracleCommand cmd = new OracleCommand("CSNET_PLUS_REPORT_PKG.submit_reject", con))
                 {
-                    // To
-                    if (!string.IsNullOrWhiteSpace(email.To))
-                    {
-                        mailMsg.To.Add(email.To);
-                    }
+                    //cmd.CommandType = CommandType.StoredProcedure;
+                    //string receiptNos = string.Join(",", request.GSFS_Receipt_Nos);
+                    //cmd.Parameters.Add("p_audit_type_id", OracleDbType.Int32).Value = request.AuditTypeId;
+                    //cmd.Parameters.Add("p_gsfs_receipt_nos", OracleDbType.Varchar2).Value = receiptNos;//cmd.Parameters.Add("p_action", OracleDbType.Varchar2).Value = "SUBMIT_TO_BRANCH";//cmd.Parameters.Add("p_msg", OracleDbType.Varchar2, 500).Direction = ParameterDirection.Output;cmd.ExecuteNonQueryAsync();
+                    FromEmail = string.Empty;
+                    toEmail = string.Empty;
+                    CcEmail = string.Empty;
+                    subject = string.Empty;
+                    header = string.Empty;
+                    footer = string.Empty;
+                    attachementFile = string.Empty;
 
-                    // CC
-                    if (!string.IsNullOrWhiteSpace(email.CC))
-                    {
-                        foreach (string cc in email.CC.Split(','))
-                        {
-                            if (!string.IsNullOrWhiteSpace(cc))
-                            {
-                                mailMsg.CC.Add(cc.Trim());
-                            }
-                        }
-                    }
 
-                    mailMsg.From = new MailAddress(eMailSender);
-                    mailMsg.Subject = email.MailSubject;
-                    mailMsg.Body = email.MailBody;
-                    mailMsg.IsBodyHtml = true;
 
-                    // Single Attachment
-                    if (!string.IsNullOrWhiteSpace(email.AttachmentFileName)
-                        && File.Exists(email.AttachmentFileName))
-                    {
-                        mailMsg.Attachments.Add(
-                            new Attachment(email.AttachmentFileName));
-                    }
 
-                    // Multiple Attachments
-                    if (email.Attachments != null)
-                    {
-                        foreach (string file in email.Attachments)
-                        {
-                            if (!string.IsNullOrWhiteSpace(file)
-                                && File.Exists(file))
-                            {
-                                mailMsg.Attachments.Add(
-                                    new Attachment(file));
-                            }
-                        }
-                    }
+                    cmd.CommandType = CommandType.StoredProcedure;
 
-                    using (SmtpClient smtp = new SmtpClient(eMailServer))
-                    {
-                        smtp.Send(mailMsg);
-                    }
+                    cmd.Parameters.Add("p_receipt_no",
+                        OracleDbType.Varchar2).Value = recepeNo;
+
+                    cmd.Parameters.Add("o_msg",
+                        OracleDbType.Varchar2,
+                        4000).Direction = ParameterDirection.Output;
+
+                    cmd.ExecuteNonQuery();
+
+                    return cmd.Parameters["o_msg"].Value?.ToString() ?? "";
                 }
             }
-            catch (Exception ex)
-            {
-                throw new Exception(
-                    "Error while sending email : " + ex.Message);
-            }
         }
+        
+        //public static void SendingEmail(Email email, IConfiguration configuration)
+        //{
+        //    try
+        //    {
+        //        string eMailServer = configuration["EmailServer"];
+
+        //        string eMailSender =
+        //            string.IsNullOrWhiteSpace(email.From)
+        //            ? configuration["EmailSupport"]
+        //            : email.From;
+
+        //        using (MailMessage mailMsg = new MailMessage())
+        //        {
+        //            // To
+        //            if (!string.IsNullOrWhiteSpace(email.To))
+        //            {
+        //                mailMsg.To.Add(email.To);
+        //            }
+
+        //            // CC
+        //            if (!string.IsNullOrWhiteSpace(email.CC))
+        //            {
+        //                foreach (string cc in email.CC.Split(','))
+        //                {
+        //                    if (!string.IsNullOrWhiteSpace(cc))
+        //                    {
+        //                        mailMsg.CC.Add(cc.Trim());
+        //                    }
+        //                }
+        //            }
+
+        //            mailMsg.From = new MailAddress(eMailSender);
+        //            mailMsg.Subject = email.MailSubject;
+        //            mailMsg.Body = email.MailBody;
+        //            mailMsg.IsBodyHtml = true;
+
+        //            // Single Attachment
+        //            if (!string.IsNullOrWhiteSpace(email.AttachmentFileName)
+        //                && File.Exists(email.AttachmentFileName))
+        //            {
+        //                mailMsg.Attachments.Add(
+        //                    new Attachment(email.AttachmentFileName));
+        //            }
+
+        //            // Multiple Attachments
+        //            if (email.Attachments != null)
+        //            {
+        //                foreach (string file in email.Attachments)
+        //                {
+        //                    if (!string.IsNullOrWhiteSpace(file)
+        //                        && File.Exists(file))
+        //                    {
+        //                        mailMsg.Attachments.Add(
+        //                            new Attachment(file));
+        //                    }
+        //                }
+        //            }
+
+        //            using (SmtpClient smtp = new SmtpClient(eMailServer))
+        //            {
+        //                smtp.Send(mailMsg);
+        //            }
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        throw new Exception(
+        //            "Error while sending email : " + ex.Message);
+        //    }
+        //}
 
         public async Task<string> Reject(RejectRequest request)
         {

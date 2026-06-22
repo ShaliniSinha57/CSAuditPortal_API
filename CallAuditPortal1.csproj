@@ -41,6 +41,7 @@
 
   <ItemGroup>
     <Folder Include="wwwroot\AuditClaimUpload\" />
+    <Folder Include="wwwroot\AttachmentFile\" />
   </ItemGroup>
 
 </Project>

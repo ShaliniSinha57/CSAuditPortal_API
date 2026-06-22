@@ -3,6 +3,7 @@ using Oracle.ManagedDataAccess.Client;
 using Oracle.ManagedDataAccess.Types;
 using System.Data;
 using System.Dynamic;
+using static CallAuditPortal1.Model.RequestDTO.EvaluationProcessRequest;
 
 namespace CallAuditPortal1.Service.DAL
 {
@@ -79,5 +80,39 @@ namespace CallAuditPortal1.Service.DAL
                 throw;
             }
         }
+
+
+        public async Task<string> SaveFeedbackStatus(SaveFeedbackRequest request)
+        {
+            try
+            {
+                using(OracleConnection con = new OracleConnection(_configuration.GetConnectionString("DefaultConnection")))
+                {
+                    await con.OpenAsync();
+
+                    using(OracleCommand cmd = new OracleCommand("CSNET_PLUS_REPORT_PKG.save_feedback", con))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.Add("p_gsfs_receipt_no", OracleDbType.Varchar2).Value = request.GSFS_ReceiptNo;
+                        cmd.Parameters.Add("p_audit_type_id", OracleDbType.Varchar2).Value = request.AuditTypeId;
+                        cmd.Parameters.Add("p_attachement_name", OracleDbType.Varchar2).Value = request.GSFS_ReceiptNo;
+                        cmd.Parameters.Add("p_status", OracleDbType.Varchar2).Value = request.Status;
+                        cmd.Parameters.Add("p_remarks", OracleDbType.Varchar2).Value = request.Remark;
+                        cmd.Parameters.Add("p_f_by", OracleDbType.Varchar2).Value = request.ActionBy;
+
+                        cmd.Parameters.Add("p_msg", OracleDbType.Varchar2, 4000).Direction = ParameterDirection.Output;
+
+                        await cmd.ExecuteNonQueryAsync();
+
+                        return cmd.Parameters["p_msg"].Value.ToString();
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
     }
 }
