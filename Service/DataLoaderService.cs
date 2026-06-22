@@ -18,9 +18,16 @@ namespace CallAuditPortal1.Service
         }
         public async Task<(string result, string session_Id)> InsertDataIntoTempTable(AuditUploadClaimRequest request)
         {
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
             try
             {
                 string sessionId = "";
+                var tableColumns = await _dataLoaderDAL.FetchTemplateColumnsAsync(Convert.ToInt32(request.AuditTypeId));
+                if (tableColumns == null || tableColumns.Count == 0)
+                {
+                    return ("Invalid audit type.", "");
+                }
                 using (OracleConnection con = new OracleConnection(
                     _configuration.GetConnectionString("DefaultConnection")))
                 {
@@ -31,7 +38,6 @@ namespace CallAuditPortal1.Service
                         sessionId = Convert.ToString(await cmd.ExecuteScalarAsync());
                         string sessionid = sessionId;
                     }
-
                     ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
                     using var stream = request.File.OpenReadStream();
                     using (var package = new ExcelPackage(stream))
@@ -49,42 +55,52 @@ namespace CallAuditPortal1.Service
                         int colCount = Math.Min(worksheet.Dimension.Columns, 148);
                         DataTable dt = new DataTable();
 
-                        dt.Columns.Add("ATTRIBUTE1");
-                        dt.Columns.Add("ATTRIBUTE2");
-                        dt.Columns.Add("CREATION_DATE", typeof(DateTime));
-                        dt.Columns.Add("CREATED_BY");
-
-                        for (int i = 3; i <= 150; i++)
+                        dt.Columns.Add("FILETYPE_ID");
+                        dt.Columns.Add("FILE_ID");
+                        dt.Columns.Add("PROCESS_FLAG");
+                        dt.Columns.Add("AUDIT_DATE");
+                        foreach(var item in tableColumns)
                         {
-                            dt.Columns.Add($"ATTRIBUTE{i}");
+                            dt.Columns.Add(item.DB_COLUMN);
                         }
+
+                        Dictionary<string, int> excelHeaderMap = new Dictionary<string, int>();
+                        
+                        for (int col = 1; col <= colCount; col++)
+                        {
+                            string header = worksheet.Cells[1, col].Text?.Trim();
+
+                            if (!string.IsNullOrWhiteSpace(header))
+                            {
+                                excelHeaderMap[header.ToUpper()] = col;
+                            }
+                        }
+
+
+
                         for (int row = 2; row <= rowCount; row++)
                         {
                             DataRow dr = dt.NewRow();
 
-                            dr["ATTRIBUTE1"] = sessionId;
-                            dr["ATTRIBUTE2"] = request.AuditTypeId;
-                            dr["CREATION_DATE"] = DateTime.Now;
-                            dr["CREATED_BY"] = "SYSTEM_USER";
+                            dr["FILETYPE_ID"] = request.AuditTypeId;
+                            dr["FILE_ID"] = sessionId;
+                            dr["PROCESS_FLAG"] = "N";
+                            dr["AUDIT_DATE"] = request.FromDate;
 
-                            int attributeIndex = 3;
-
-                            for (int col = 1; col <= colCount; col++)
+                            foreach(var item in tableColumns)
                             {
-
-                                if (attributeIndex > 150)
+                                if(excelHeaderMap.TryGetValue(item.EXCEL_COLUMN_NAME.ToUpper(), out int colNo))
                                 {
-                                    break;
+                                    string value = worksheet.Cells[row, colNo].Text?.Trim();
+
+                                    dr[item.DB_COLUMN] = string.IsNullOrWhiteSpace(value) ? DBNull.Value : value;
                                 }
-                                string value = worksheet.Cells[row, col].Text?.Trim();
-
-                                dr[$"ATTRIBUTE{attributeIndex}"] =
-                                    string.IsNullOrWhiteSpace(value)
-                                        ? DBNull.Value
-                                        : (object)value;
-
-                                attributeIndex++;
+                                else
+                                {
+                                    dr[item.DB_COLUMN] = DBNull.Value;
+                                }
                             }
+
                             dt.Rows.Add(dr);
                            
                         }
@@ -94,22 +110,19 @@ namespace CallAuditPortal1.Service
                             {
                                 using (OracleBulkCopy bulkCopy = new OracleBulkCopy(con))
                                 {
-                                    bulkCopy.DestinationTableName = "CSNET_PLUS_INTERFACE_ALL";
+                                    bulkCopy.DestinationTableName = tableColumns.FirstOrDefault().STG_TABLE;
 
                                     bulkCopy.BatchSize = 1000;
                                     bulkCopy.BulkCopyTimeout = 0;
-                                    bulkCopy.ColumnMappings.Add("ATTRIBUTE1", "ATTRIBUTE1");
-                                    bulkCopy.ColumnMappings.Add("ATTRIBUTE2", "ATTRIBUTE2");
-                                    bulkCopy.ColumnMappings.Add("CREATION_DATE", "CREATION_DATE");
-                                    bulkCopy.ColumnMappings.Add("CREATED_BY", "CREATED_BY");
+                                    bulkCopy.ColumnMappings.Add("FILETYPE_ID", "FILETYPE_ID");
+                                    bulkCopy.ColumnMappings.Add("FILE_ID", "FILE_ID");
+                                    bulkCopy.ColumnMappings.Add("PROCESS_FLAG", "PROCESS_FLAG");
+                                    bulkCopy.ColumnMappings.Add("AUDIT_DATE", "AUDIT_DATE");
 
-                                    for (int i = 3; i <= 150; i++)
+                                    foreach(var item in tableColumns)
                                     {
-                                        bulkCopy.ColumnMappings.Add(
-                                            $"ATTRIBUTE{i}",
-                                            $"ATTRIBUTE{i}");
+                                        bulkCopy.ColumnMappings.Add(item.DB_COLUMN, item.DB_COLUMN);
                                     }
-
                                     bulkCopy.WriteToServer(dt);
                                 }
                                 trans.Commit();
@@ -122,6 +135,10 @@ namespace CallAuditPortal1.Service
                         }
                         
                     }
+
+                    sw.Stop();
+
+                    Console.WriteLine("staging table insertion time", sw.Elapsed());
 
                     var uploadProcess = await _dataLoaderDAL.UploadData(sessionId, request.AuditTypeId, request.FromDate, "System_user");
 
@@ -180,10 +197,7 @@ namespace CallAuditPortal1.Service
         //    }
         //}
 
-        Task<string> IDataLoaderService.DownloadTemplate(int auditTypeId)
-        {
-            throw new NotImplementedException();
-        }
+    
     }
 
 }

@@ -12,8 +12,6 @@ namespace CallAuditPortal1.Service.Interface
             Task<string> SaveStatus(SaveStatusRequest request);
 
             Task<string> RejectStatus(RejectUploadedDataRequest request);
-
-        Task<string> DownloadTemplate(int auditTypeId);
     }
 
     }
