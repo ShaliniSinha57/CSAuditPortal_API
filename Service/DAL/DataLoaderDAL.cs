@@ -4,6 +4,7 @@ using CallAuditPortal1.Model.ResponseDTO;
 using CallAuditPortal1.Service.Interface;
 using Oracle.ManagedDataAccess.Client;
 using Oracle.ManagedDataAccess.Types;
+using System.CodeDom;
 using System.Configuration;
 using System.Data;
 using System.Dynamic;
@@ -18,70 +19,41 @@ namespace CallAuditPortal1.Service.DAL
             _configuration = configuration;
         }
 
-        public async Task<string> UploadData(string sessionId, string templateId, string auditData, string userName)
+        public async Task<(string, bool)> UploadData(string sessionId, string templateId, string userName)
         {
             string connectionString =
                 _configuration.GetConnectionString("DefaultConnection");
 
             try
             {
-                using (OracleConnection con =
-                    new OracleConnection(connectionString))
+                using (OracleConnection con = new OracleConnection(connectionString))
                 {
-                    using (OracleCommand cmd =
-                        new OracleCommand("csnet_plus_excel_pkg.csnet_plus_excel_upld_proc", con))
+                    await con.OpenAsync();
+                    using (OracleCommand cmd = new OracleCommand("PKG_TEMPLATE_UPLOAD.PROC_PROCESS_UPLOAD", con))
                     {
 
                         cmd.CommandType = CommandType.StoredProcedure;
 
-                        if (string.IsNullOrWhiteSpace(auditData))
-                        {
-                            return "Audit date is required.";
-                        }
+                        cmd.Parameters.Add("P_FILEID", OracleDbType.Varchar2).Value = sessionId;
+                        cmd.Parameters.Add("P_FILETYPEID", OracleDbType.Int32).Value = Convert.ToInt32(templateId);
 
-                        cmd.Parameters.Add("p_session", OracleDbType.Varchar2).Value = sessionId;
-                        cmd.Parameters.Add("p_template_id", OracleDbType.Int32).Value = Convert.ToInt32(templateId);
-                        cmd.Parameters.Add("p_audit_date", OracleDbType.Varchar2).Value = auditData.Trim();
-                        cmd.Parameters.Add("p_user", OracleDbType.Varchar2).Value = userName;
-                        OracleParameter statusParam = new OracleParameter("p_status", OracleDbType.Varchar2, 100);
-                        statusParam.Direction = ParameterDirection.Output;
-                        cmd.Parameters.Add(statusParam);
-                        OracleParameter insertedParam = new OracleParameter("p_inserted", OracleDbType.Int32);
-                        insertedParam.Direction = ParameterDirection.Output;
-                        cmd.Parameters.Add(insertedParam);
-                        OracleParameter updatedParam = new OracleParameter("p_updated", OracleDbType.Int32);
-                        updatedParam.Direction = ParameterDirection.Output;
-                        cmd.Parameters.Add(updatedParam);
-                        OracleParameter errorParam = new OracleParameter("p_errors", OracleDbType.Int32);
-                        errorParam.Direction = ParameterDirection.Output;
-
-                        cmd.Parameters.Add(errorParam);
-                        await con.OpenAsync();
+                        //Output
+                        cmd.Parameters.Add("P_STATUS_FLAG", OracleDbType.Int32).Direction = ParameterDirection.Output;
+                        cmd.Parameters.Add("P_STATUS_MSG", OracleDbType.Varchar2, 4000).Direction = ParameterDirection.Output;
+                        
                         await cmd.ExecuteNonQueryAsync();
-                        string status = statusParam.Value?.ToString();
-                        int inserted = Convert.ToInt32(insertedParam.Value.ToString());
-                        int updated = Convert.ToInt32(updatedParam.Value?.ToString());
-                        int errors = Convert.ToInt32(errorParam.Value?.ToString());
-                        var response = new UploadResponse
-                        {
-                            Status = status,
-                            Inserted = inserted,
-                            Updated = updated,
-                            Error = errors,
-                            Message = errors > 0 ? "File Uploaded with error" : "File Uploaded Successfully"
 
-                        };
-                        return
-                            $"Status : {status}\n" +
-                            $"Inserted : {inserted}\n" +
-                            $"Updated : {updated}\n" +
-                            $"Errors : {errors}";
+                        string message = cmd.Parameters["P_STATUS_MSG"].Value.ToString();
+                        int flag = ((OracleDecimal)cmd.Parameters["P_STATUS_FLAG"].Value).ToInt32();
+
+                        
+                        return (message, flag == 0);
                     }
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                return ex.Message;
+                throw;
             }
         }
 

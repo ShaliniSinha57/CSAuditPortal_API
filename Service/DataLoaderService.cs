@@ -16,7 +16,7 @@ namespace CallAuditPortal1.Service
             _configuration = configuration;
             _dataLoaderDAL = dataLoaderDAL;
         }
-        public async Task<(string result, string session_Id)> InsertDataIntoTempTable(AuditUploadClaimRequest request)
+        public async Task<(string result, string session_Id, bool status)> InsertDataIntoTempTable(AuditUploadClaimRequest request)
         {
             Stopwatch sw = new Stopwatch();
             sw.Start();
@@ -26,7 +26,7 @@ namespace CallAuditPortal1.Service
                 var tableColumns = await _dataLoaderDAL.FetchTemplateColumnsAsync(Convert.ToInt32(request.AuditTypeId));
                 if (tableColumns == null || tableColumns.Count == 0)
                 {
-                    return ("Invalid audit type.", "");
+                    return ("Invalid audit type.", "", false);
                 }
                 using (OracleConnection con = new OracleConnection(
                     _configuration.GetConnectionString("DefaultConnection")))
@@ -45,18 +45,18 @@ namespace CallAuditPortal1.Service
                         ExcelWorksheet worksheet = package.Workbook.Worksheets[0];
                         if (worksheet == null)
                         {
-                            return ("Worksheet not found.", "");
+                            return ("Worksheet not found.", "", false);
                         }
                         if (worksheet.Dimension == null)
                         {
-                            return ("Excel sheet is empty.", "");
+                            return ("Excel sheet is empty.", "", false);
                         }
                         int rowCount = worksheet.Dimension.Rows;
                         int colCount = Math.Min(worksheet.Dimension.Columns, 148);
                         DataTable dt = new DataTable();
 
-                        dt.Columns.Add("FILETYPE_ID");
-                        dt.Columns.Add("FILE_ID");
+                        dt.Columns.Add("TEMPLATE_ID");
+                        dt.Columns.Add("SESSION_ID");
                         dt.Columns.Add("PROCESS_FLAG");
                         dt.Columns.Add("AUDIT_DATE");
                         foreach(var item in tableColumns)
@@ -82,8 +82,8 @@ namespace CallAuditPortal1.Service
                         {
                             DataRow dr = dt.NewRow();
 
-                            dr["FILETYPE_ID"] = request.AuditTypeId;
-                            dr["FILE_ID"] = sessionId;
+                            dr["TEMPLATE_ID"] = request.AuditTypeId;
+                            dr["SESSION_ID"] = sessionId;
                             dr["PROCESS_FLAG"] = "N";
                             dr["AUDIT_DATE"] = request.FromDate;
 
@@ -114,8 +114,8 @@ namespace CallAuditPortal1.Service
 
                                     bulkCopy.BatchSize = 1000;
                                     bulkCopy.BulkCopyTimeout = 0;
-                                    bulkCopy.ColumnMappings.Add("FILETYPE_ID", "FILETYPE_ID");
-                                    bulkCopy.ColumnMappings.Add("FILE_ID", "FILE_ID");
+                                    bulkCopy.ColumnMappings.Add("TEMPLATE_ID", "TEMPLATE_ID");
+                                    bulkCopy.ColumnMappings.Add("SESSION_ID", "SESSION_ID");
                                     bulkCopy.ColumnMappings.Add("PROCESS_FLAG", "PROCESS_FLAG");
                                     bulkCopy.ColumnMappings.Add("AUDIT_DATE", "AUDIT_DATE");
 
@@ -135,24 +135,15 @@ namespace CallAuditPortal1.Service
                         }
                         
                     }
-
                     sw.Stop();
-
                     Console.WriteLine($"staging table insertion time: {sw.Elapsed.TotalSeconds} seconds");
 
-                    var uploadProcess = await _dataLoaderDAL.UploadData(sessionId, request.AuditTypeId, request.FromDate, "System_user");
+                    sw.Start();
+                    var uploadProcess = await _dataLoaderDAL.UploadData(sessionId, request.AuditTypeId, "System_user");
+                    sw.Stop();
+                    Console.WriteLine($"Transfer to main table time : {sw.Elapsed.TotalSeconds} seconds");
 
-                    //return
-                    //    $"Data inserted successfully. Session ID : {sessionId}";
-                    if (!string.IsNullOrEmpty(uploadProcess))
-                    {
-                        return (uploadProcess, sessionId);
-                    }
-                    else
-                    {
-                        return
-                            ($"Data inserted successfully. Session ID : {sessionId}", "");
-                    }
+                    return (uploadProcess.Item1, sessionId, uploadProcess.Item2);
                 }
             }
             catch (Exception)

@@ -6,7 +6,7 @@ namespace CallAuditPortal1.Service.Interface
     public interface IDataLoaderDAL
     {
 
-        Task<string> UploadData(string sessionId, string templateId, string auditDate, string userName);
+        Task<(string, bool)> UploadData(string sessionId, string templateId, string userName);
 
         Task<List<Template_Columns>> FetchTemplateColumnsAsync(int templateId);
 

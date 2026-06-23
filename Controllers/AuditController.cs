@@ -58,12 +58,24 @@ namespace CallAuditPortal1.Controllers
                 try
                 {
                 var data = await _service.InsertDataIntoTempTable(request);
+                if (data.status)
+                {
                     return Ok(new
                     {
                         status = "Success",
                         data = data.result,
                         sessionId = data.session_Id
                     });
+                }
+                else
+                {
+                    return StatusCode(400, new
+                    {
+                        message = data.result,
+                        sessionId = data.session_Id
+                    });
+                }
+                    
                 }
                 catch (Exception ex)
                 {
