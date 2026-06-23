@@ -59,6 +59,7 @@ namespace CallAuditPortal1.Service
                         dt.Columns.Add("SESSION_ID");
                         dt.Columns.Add("PROCESS_FLAG");
                         dt.Columns.Add("AUDIT_DATE");
+                        dt.Columns.Add("ROW_NO");
                         foreach(var item in tableColumns)
                         {
                             dt.Columns.Add(item.DB_COLUMN);
@@ -86,6 +87,7 @@ namespace CallAuditPortal1.Service
                             dr["SESSION_ID"] = sessionId;
                             dr["PROCESS_FLAG"] = "N";
                             dr["AUDIT_DATE"] = request.FromDate;
+                            dr["ROW_NO"] = row-1;
 
                             foreach(var item in tableColumns)
                             {
@@ -118,6 +120,7 @@ namespace CallAuditPortal1.Service
                                     bulkCopy.ColumnMappings.Add("SESSION_ID", "SESSION_ID");
                                     bulkCopy.ColumnMappings.Add("PROCESS_FLAG", "PROCESS_FLAG");
                                     bulkCopy.ColumnMappings.Add("AUDIT_DATE", "AUDIT_DATE");
+                                    bulkCopy.ColumnMappings.Add("ROW_NO", "ROW_NO");
 
                                     foreach(var item in tableColumns)
                                     {
