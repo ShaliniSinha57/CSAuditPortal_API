@@ -49,8 +49,30 @@ namespace CallAuditPortal1.Controllers
                 return BadRequest(ex.Message);
                 }
             }
-    
-            [HttpPost("ProcessUploadData")]
+
+        [HttpPost("DownloadExcelErrorRow")]
+        public async Task<IActionResult> DownloadExcelErrorRow(int templateId, int sessionId)
+        {
+            try
+            {
+                var data = await _service.DownloadErrorRows(templateId, sessionId);
+                if (data.Item1 == null)
+                {
+                    return NotFound("File Not Found");
+                }
+
+                return File(data.Item1,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    $"{data.Item2}.xlsx"
+                    );
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("ProcessUploadData")]
             [RequestSizeLimit(100_000_000)]
             [RequestFormLimits(MultipartBodyLengthLimit = 100_000_000)]
             public async Task<IActionResult> ProcessUploadData([FromForm] AuditUploadClaimRequest request)

@@ -49,6 +49,7 @@ namespace CallAuditPortal1.Service.BAL
                         colIndex++;
                     }
 
+
                     worksheet.Columns().AdjustToContents();
                     using (var stream = new MemoryStream())
                     {

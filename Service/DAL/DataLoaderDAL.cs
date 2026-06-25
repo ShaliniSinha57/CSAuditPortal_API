@@ -46,14 +46,87 @@ namespace CallAuditPortal1.Service.DAL
                         await cmd.ExecuteNonQueryAsync();
 
                         string message = cmd.Parameters["P_STATUS_MSG"].Value.ToString();
-                        int flag = ((OracleDecimal)cmd.Parameters["P_STATUS_FLAG"].Value).ToInt32();
-                        int intsertCount = ((OracleDecimal)cmd.Parameters["P_INS_COUNT"].Value).ToInt32();
-                        int updateCount = ((OracleDecimal)cmd.Parameters["P_UPD_COUNT"].Value).ToInt32();
-                        int errorCount = ((OracleDecimal)cmd.Parameters["P_ERR_COUNT"].Value).ToInt32();
+                        int flag = GetOracleInt(cmd.Parameters["P_STATUS_FLAG"]);
+                        int insertCount = GetOracleInt(cmd.Parameters["P_INS_COUNT"]);
+                        int updateCount = GetOracleInt(cmd.Parameters["P_UPD_COUNT"]);
+                        int errorCount = GetOracleInt(cmd.Parameters["P_ERR_COUNT"]);
 
-                        
-                        return (message, flag == 0, insertCount: intsertCount, updateCount, errorCount);
+
+                        return (message, flag == 0, insertCount: insertCount, updateCount, errorCount);
                     }
+                }
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+        private int GetOracleInt(OracleParameter parameter)
+        {
+            object value = parameter?.Value;
+
+            if (value == null || value == DBNull.Value)
+                return 0;
+
+            if (value is OracleDecimal od)
+                return od.IsNull ? 0 : od.ToInt32();
+
+            return Convert.ToInt32(value);
+        }
+
+        public async Task<List<dynamic>> GetErrorData(int templateId, int sessionId)
+        {
+            try
+            {
+                List<dynamic> data = new List<dynamic>();
+                using (OracleConnection con = new OracleConnection(_configuration.GetConnectionString("DefaultConnection")))
+                {
+                    await con.OpenAsync();
+
+                    using (OracleCommand cmd = new OracleCommand("PKG_TEMPLATE_UPLOAD.PROC_GET_ERR_DATA", con))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.Add("P_TEMPLATE_ID", OracleDbType.Int32).Value = templateId;
+                        cmd.Parameters.Add("P_SESSION_ID", OracleDbType.Int32).Value = sessionId;
+
+                        //Output
+                        cmd.Parameters.Add("P_ERR_DATA", OracleDbType.RefCursor).Direction = ParameterDirection.Output;
+                        cmd.Parameters.Add("P_STATUS_FLAG", OracleDbType.Int32).Direction = ParameterDirection.Output;
+                        cmd.Parameters.Add("P_STATUS_MSG", OracleDbType.Varchar2, 4000).Direction = ParameterDirection.Output;
+
+                        await cmd.ExecuteNonQueryAsync();
+
+                        string message = cmd.Parameters["P_STATUS_MSG"].Value.ToString();
+                        int flag = GetOracleInt(cmd.Parameters["P_STATUS_FLAG"]);
+
+                        if(flag == 0)
+                        {
+                            OracleRefCursor refCurs = (OracleRefCursor)cmd.Parameters["P_ERR_DATA"].Value;
+                            using (OracleDataReader reader = refCurs.GetDataReader())
+                            {
+                                if (reader.HasRows)
+                                {
+                                    while (await reader.ReadAsync())
+                                    {
+                                        var row = new ExpandoObject() as IDictionary<string, object>;
+
+                                        for (int i = 0; i < reader.FieldCount; i++)
+                                        {
+                                            row.Add(
+                                                reader.GetName(i),
+                                                reader.IsDBNull(i)
+                                                    ? null
+                                                    : reader.GetValue(i)
+                                            );
+                                        }
+                                        data.Add(row);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    return data;
                 }
             }
             catch
@@ -170,7 +243,6 @@ namespace CallAuditPortal1.Service.DAL
                         {
                             while (await reader.ReadAsync())
                             {
-                                Console.WriteLine("Row Found");
                                 var row = new ExpandoObject() as IDictionary<string, object>;
 
                                 for (int i = 0; i < reader.FieldCount; i++)

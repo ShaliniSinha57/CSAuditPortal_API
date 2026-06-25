@@ -1,6 +1,8 @@
 using CallAuditPortal1.Model.RequestDTO;
 using CallAuditPortal1.Model.ResponseDTO;
 using CallAuditPortal1.Service.Interface;
+using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Spreadsheet;
 using OfficeOpenXml;
 using Oracle.ManagedDataAccess.Client;
 using System.Data;
@@ -171,6 +173,81 @@ namespace CallAuditPortal1.Service
                 throw;
             }
         }
+
+        public async Task<(byte[] bytes, string fileName)> DownloadErrorRows(int templateId, int sessionId)
+        {
+            try
+            {
+                var data = await _dataLoaderDAL.GetErrorData(templateId, sessionId);
+
+                if (data == null || data.Count == 0)
+                    return (null, "");
+
+                var excelHeader = await _dataLoaderDAL.FetchTemplateColumnsAsync(templateId);
+
+                var orderedHeaderData = excelHeader.OrderBy(d => d.EXCEL_COLUMN_NO).ToList();
+                string templateName = orderedHeaderData.FirstOrDefault().STG_TABLE;
+
+                using (XLWorkbook wb = new XLWorkbook())
+                {
+                    var worksheet = wb.Worksheets.Add(templateName);
+                    int colIndex = 1;
+
+                    foreach (var item in orderedHeaderData)
+                    {
+                        worksheet.Cell(1, colIndex).Value = item.EXCEL_COLUMN_NAME;
+                        worksheet.Cell(1, colIndex).Style.Font.Bold = true;
+                        colIndex++;
+                    }
+
+                    worksheet.Cell(1, colIndex).Value = "Error";
+                    worksheet.Cell(1, colIndex).Style.Font.Bold = true;
+                    colIndex++;
+
+                    int rowIndex = 2;
+
+                    foreach (IDictionary<string, object> row in data)
+                    {
+                        colIndex = 1;
+
+                        foreach (var header in orderedHeaderData)
+                        {
+                            // Assuming the Oracle cursor column names match EXCEL_COLUMN_NAME
+                            if (row.TryGetValue(header.DB_COLUMN, out var value))
+                            {
+                                worksheet.Cell(rowIndex, colIndex).Value = value?.ToString() ?? "";
+                            }
+                            else
+                            {
+                                worksheet.Cell(rowIndex, colIndex).Value = "";
+                            }
+
+                            colIndex++;
+                        }
+
+                        // Write Error column
+                        if (row.TryGetValue("ERR", out var errorValue))
+                        {
+                            worksheet.Cell(rowIndex, colIndex).Value = errorValue?.ToString() ?? "";
+                        }
+
+                        rowIndex++;
+                    }
+
+                    worksheet.Columns().AdjustToContents();
+                    using (var stream = new MemoryStream())
+                    {
+                        wb.SaveAs(stream);
+                        return (stream.ToArray(), templateName);
+                    }
+                }
+
+            }
+            catch
+            {
+                throw;
+            }
+        }
         public async Task<(int TotalData, List<dynamic>)> SearchAuditData(AuditSearchRequest request)
         {
             return await _dataLoaderDAL.SearchAuditData(request);
@@ -196,19 +273,6 @@ namespace CallAuditPortal1.Service
                 SelectedIds = request.SelectedIds
             });
         }
-        //public string DownloadTemplate(int auditTypeId)
-        //{
-        //    try
-        //    {
-        //        return _dataLoaderDAL.DownloadTemplate(auditTypeId);
-        //    }
-        //    catch (Exception)
-        //    {
-        //        throw;
-        //    }
-        //}
-
-    
     }
 
 }

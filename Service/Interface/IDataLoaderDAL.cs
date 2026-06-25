@@ -8,6 +8,8 @@ namespace CallAuditPortal1.Service.Interface
 
         Task<(string message, bool status, int insertCount, int updatecount, int errorCount)> UploadData(string sessionId, string templateId, string userName);
 
+        Task<List<dynamic>> GetErrorData(int templateId, int sessionId);
+
         Task<List<Template_Columns>> FetchTemplateColumnsAsync(int templateId);
 
         Task<(int TotalData, List<dynamic>)> SearchAuditData(AuditSearchRequest request);
