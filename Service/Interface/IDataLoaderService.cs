@@ -1,10 +1,11 @@
 using CallAuditPortal1.Model.RequestDTO;
+using CallAuditPortal1.Model.ResponseDTO;
 
 namespace CallAuditPortal1.Service.Interface
 {
     public interface IDataLoaderService
     {
-            Task<(string result, string session_Id, bool status)> InsertDataIntoTempTable(AuditUploadClaimRequest request);
+            Task<UploadResponse> InsertDataIntoTempTable(AuditUploadClaimRequest request);
 
             Task<(int TotalData, List<dynamic>)> SearchAuditData(AuditSearchRequest request);
 

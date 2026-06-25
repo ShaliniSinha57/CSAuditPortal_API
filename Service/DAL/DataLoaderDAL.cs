@@ -19,10 +19,9 @@ namespace CallAuditPortal1.Service.DAL
             _configuration = configuration;
         }
 
-        public async Task<(string, bool)> UploadData(string sessionId, string templateId, string userName)
+        public async Task<(string message, bool status, int insertCount, int updatecount, int errorCount)> UploadData(string sessionId, string templateId, string userName)
         {
-            string connectionString =
-                _configuration.GetConnectionString("DefaultConnection");
+            string connectionString = _configuration.GetConnectionString("DefaultConnection");
 
             try
             {
@@ -39,15 +38,21 @@ namespace CallAuditPortal1.Service.DAL
 
                         //Output
                         cmd.Parameters.Add("P_STATUS_FLAG", OracleDbType.Int32).Direction = ParameterDirection.Output;
+                        cmd.Parameters.Add("P_INS_COUNT", OracleDbType.Int32).Direction = ParameterDirection.Output;
+                        cmd.Parameters.Add("P_UPD_COUNT", OracleDbType.Int32).Direction = ParameterDirection.Output;
+                        cmd.Parameters.Add("P_ERR_COUNT", OracleDbType.Int32).Direction = ParameterDirection.Output;
                         cmd.Parameters.Add("P_STATUS_MSG", OracleDbType.Varchar2, 4000).Direction = ParameterDirection.Output;
                         
                         await cmd.ExecuteNonQueryAsync();
 
                         string message = cmd.Parameters["P_STATUS_MSG"].Value.ToString();
                         int flag = ((OracleDecimal)cmd.Parameters["P_STATUS_FLAG"].Value).ToInt32();
+                        int intsertCount = ((OracleDecimal)cmd.Parameters["P_INS_COUNT"].Value).ToInt32();
+                        int updateCount = ((OracleDecimal)cmd.Parameters["P_UPD_COUNT"].Value).ToInt32();
+                        int errorCount = ((OracleDecimal)cmd.Parameters["P_ERR_COUNT"].Value).ToInt32();
 
                         
-                        return (message, flag == 0);
+                        return (message, flag == 0, insertCount: intsertCount, updateCount, errorCount);
                     }
                 }
             }

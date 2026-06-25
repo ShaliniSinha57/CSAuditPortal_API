@@ -1,4 +1,5 @@
 using CallAuditPortal1.Model.RequestDTO;
+using CallAuditPortal1.Model.ResponseDTO;
 using CallAuditPortal1.Service.Interface;
 using OfficeOpenXml;
 using Oracle.ManagedDataAccess.Client;
@@ -16,7 +17,7 @@ namespace CallAuditPortal1.Service
             _configuration = configuration;
             _dataLoaderDAL = dataLoaderDAL;
         }
-        public async Task<(string result, string session_Id, bool status)> InsertDataIntoTempTable(AuditUploadClaimRequest request)
+        public async Task<UploadResponse> InsertDataIntoTempTable(AuditUploadClaimRequest request)
         {
             Stopwatch sw = new Stopwatch();
             sw.Start();
@@ -26,7 +27,10 @@ namespace CallAuditPortal1.Service
                 var tableColumns = await _dataLoaderDAL.FetchTemplateColumnsAsync(Convert.ToInt32(request.AuditTypeId));
                 if (tableColumns == null || tableColumns.Count == 0)
                 {
-                    return ("Invalid audit type.", "", false);
+                    return new UploadResponse
+                    {
+                        Message = "Invalid audit type."
+                    };
                 }
                 using (OracleConnection con = new OracleConnection(
                     _configuration.GetConnectionString("DefaultConnection")))
@@ -45,11 +49,17 @@ namespace CallAuditPortal1.Service
                         ExcelWorksheet worksheet = package.Workbook.Worksheets[0];
                         if (worksheet == null)
                         {
-                            return ("Worksheet not found.", "", false);
+                            return new UploadResponse
+                            {
+                                Message = "Worksheet not found."
+                            };
                         }
                         if (worksheet.Dimension == null)
                         {
-                            return ("Excel sheet is empty.", "", false);
+                            return new UploadResponse
+                            {
+                                Message = "Excel sheet is empty."
+                            };
                         }
                         int rowCount = worksheet.Dimension.Rows;
                         int colCount = Math.Min(worksheet.Dimension.Columns, 148);
@@ -94,7 +104,6 @@ namespace CallAuditPortal1.Service
                                 if(excelHeaderMap.TryGetValue(item.EXCEL_COLUMN_NAME.ToUpper(), out int colNo))
                                 {
                                     string value = worksheet.Cells[row, colNo].Text?.Trim();
-
                                     dr[item.DB_COLUMN] = string.IsNullOrWhiteSpace(value) ? DBNull.Value : value;
                                 }
                                 else
@@ -146,7 +155,15 @@ namespace CallAuditPortal1.Service
                     sw.Stop();
                     Console.WriteLine($"Transfer to main table time : {sw.Elapsed.TotalSeconds} seconds");
 
-                    return (uploadProcess.Item1, sessionId, uploadProcess.Item2);
+                    return new UploadResponse
+                    {
+                        Message = uploadProcess.message,
+                        Status = uploadProcess.status,
+                        SessionId = sessionId,
+                        Inserted = uploadProcess.insertCount,
+                        Updated = uploadProcess.updatecount,
+                        Error = uploadProcess.errorCount
+                    };
                 }
             }
             catch (Exception)
