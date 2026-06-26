@@ -10,8 +10,13 @@ namespace CallAuditPortal1.Service.Interface
 
         Task<string> Reject(RejectRequest request);
 
-       
-        Task<byte[]> Download(DownloadRequest request);
 
+        Task<byte[]> Download(DownloadRequest request);
+        Task<bool> SendMailForSucessful(string userid, string role);
+        Task<bool> SendMailForAccepted(string userid, string role);
+        Task<bool> SendMailForFeedback(string userid, string role);
+        Task<bool> SendMailForRejected(string userid, string role);
+        
+        //Task<List<MailDynamicRow>> GetAcceptedMailRows(string userId);
     }
 }

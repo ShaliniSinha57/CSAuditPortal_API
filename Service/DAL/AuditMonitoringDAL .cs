@@ -21,9 +21,11 @@ namespace CallAuditPortal1.Service.DAL
     public class AuditMonitoringDAL : IAuditMonitoringDAL
     {
         private readonly IConfiguration _configuration;
-        public AuditMonitoringDAL(IConfiguration configuration)
+        private readonly IEmailService _emailService;
+        public AuditMonitoringDAL(IConfiguration configuration, IEmailService emailService)
         {
             _configuration = configuration;
+            _emailService = emailService;
         }
         public async Task<string> SubmitToBranch(SubmitBranchRequest request)
         {
@@ -40,79 +42,51 @@ namespace CallAuditPortal1.Service.DAL
                     cmd.Parameters.Add("p_msg", OracleDbType.Varchar2, 500).Direction = ParameterDirection.Output;
                     await cmd.ExecuteNonQueryAsync();
                     var message = cmd.Parameters["p_msg"].Value?.ToString();
+
                     return message;
                 }
 
             }
         }
-        public static void SendingEmail(Email email, IConfiguration configuration)
+        public string SubmitToBranchSendEmail(string userId,string process,string sessionId,string receiptNos, out string FromEmail, out string toEmail, out string CcEmail, out string subject, out string header, out string footer, out string attachementFile)
         {
-            try
+            using (OracleConnection con = new OracleConnection(_configuration.GetConnectionString("DefaultConnection")))
             {
-                string eMailServer = configuration["EmailServer"];
+                con.Open();
 
-                string eMailSender =
-                    string.IsNullOrWhiteSpace(email.From)
-                    ? configuration["EmailSupport"]
-                    : email.From;
-
-                using (MailMessage mailMsg = new MailMessage())
+                using (OracleCommand cmd = new OracleCommand("CSNET_PLUS_MAIL_PKG.generate_mail_data", con))
                 {
-                    // To
-                    if (!string.IsNullOrWhiteSpace(email.To))
-                    {
-                        mailMsg.To.Add(email.To);
-                    }
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.Add("p_user_id", OracleDbType.Varchar2).Value = userId;
 
-                    // CC
-                    if (!string.IsNullOrWhiteSpace(email.CC))
-                    {
-                        foreach (string cc in email.CC.Split(','))
-                        {
-                            if (!string.IsNullOrWhiteSpace(cc))
-                            {
-                                mailMsg.CC.Add(cc.Trim());
-                            }
-                        }
-                    }
+                    cmd.Parameters.Add("p_process", OracleDbType.Varchar2).Value = process;
 
-                    mailMsg.From = new MailAddress(eMailSender);
-                    mailMsg.Subject = email.MailSubject;
-                    mailMsg.Body = email.MailBody;
-                    mailMsg.IsBodyHtml = true;
+                    cmd.Parameters.Add("p_session_id", OracleDbType.Varchar2).Value = sessionId;
 
-                    // Single Attachment
-                    if (!string.IsNullOrWhiteSpace(email.AttachmentFileName)
-                        && File.Exists(email.AttachmentFileName))
-                    {
-                        mailMsg.Attachments.Add(
-                            new Attachment(email.AttachmentFileName));
-                    }
+                    cmd.Parameters.Add("p_gsfs_receipt_nos", OracleDbType.Varchar2).Value = receiptNos;
 
-                    // Multiple Attachments
-                    if (email.Attachments != null)
-                    {
-                        foreach (string file in email.Attachments)
-                        {
-                            if (!string.IsNullOrWhiteSpace(file)
-                                && File.Exists(file))
-                            {
-                                mailMsg.Attachments.Add(
-                                    new Attachment(file));
-                            }
-                        }
-                    }
+                    FromEmail = string.Empty;
+                    toEmail = string.Empty;
+                    CcEmail = string.Empty;
+                    subject = string.Empty;
+                    header = string.Empty;
+                    footer = string.Empty;
+                    attachementFile = string.Empty;
 
-                    using (SmtpClient smtp = new SmtpClient(eMailServer))
-                    {
-                        smtp.Send(mailMsg);
-                    }
+
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.Add("p_userid",
+                        OracleDbType.Varchar2).Value = userId;
+                   
+                    cmd.Parameters.Add("o_msg",
+                        OracleDbType.Varchar2,
+                        4000).Direction = ParameterDirection.Output;
+
+                    cmd.ExecuteNonQuery();
+
+                    return cmd.Parameters["o_msg"].Value?.ToString() ?? "";
                 }
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(
-                    "Error while sending email : " + ex.Message);
             }
         }
 

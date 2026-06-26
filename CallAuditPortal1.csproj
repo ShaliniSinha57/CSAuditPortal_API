@@ -4,7 +4,14 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+	  <PreserveCompilationContext>true</PreserveCompilationContext>
+	  <CopyRefAssembliesToPublishDirectory>true</CopyRefAssembliesToPublishDirectory>
+
   </PropertyGroup>
+
+  <!--<ItemGroup>
+    <Content Remove="View\Email_Templates\Feedback_submit.cshtml" />
+  </ItemGroup>-->
 
   <ItemGroup>
     <PackageReference Include="ClosedXML" Version="0.105.0" />
@@ -39,6 +46,7 @@
 
   <ItemGroup>
     <Folder Include="wwwroot\AuditClaimUpload\" />
+    <Folder Include="wwwroot\AttachmentFile\" />
   </ItemGroup>
 
 </Project>
