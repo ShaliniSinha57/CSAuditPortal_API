@@ -18,14 +18,10 @@ namespace CallAuditPortal1.Service
         public async Task SendEmailAsync(string fromEmail, string toEmail, string ccEmail, string subject, string bodyHtml, string attachementName = null)
 
         {
-
             try
             {
-
                 var introMessage = @"<p>Dear User,</p> <p>This is the scheme that has been approved:</p>        ";
-
-
-                var footer = @"<p style='font-size:12px; color:#777;'>This is an automated message from LG Happy Call Audit.</p>";
+                var footer = @"<p style='font-size:12px; color:#777;'>This is an automated message from LG CS AuditPortal </p>";
 
 
                 var finalBody = introMessage + footer;

@@ -21,9 +21,11 @@ namespace CallAuditPortal1.Service.DAL
     public class AuditMonitoringDAL : IAuditMonitoringDAL
     {
         private readonly IConfiguration _configuration;
-        public AuditMonitoringDAL(IConfiguration configuration)
+        private readonly IEmailService _emailService;
+        public AuditMonitoringDAL(IConfiguration configuration, IEmailService emailService)
         {
             _configuration = configuration;
+            _emailService = emailService;
         }
         public async Task<string> SubmitToBranch(SubmitBranchRequest request)
         {
@@ -40,22 +42,29 @@ namespace CallAuditPortal1.Service.DAL
                     cmd.Parameters.Add("p_msg", OracleDbType.Varchar2, 500).Direction = ParameterDirection.Output;
                     await cmd.ExecuteNonQueryAsync();
                     var message = cmd.Parameters["p_msg"].Value?.ToString();
+
                     return message;
                 }
 
             }
         }
-        public string SubmitToBranchSendEmail(string recepeNo, out string FromEmail, out string toEmail, out string CcEmail, out string subject, out string header, out string footer, out string attachementFile)
+        public string SubmitToBranchSendEmail(string userId,string process,string sessionId,string receiptNos, out string FromEmail, out string toEmail, out string CcEmail, out string subject, out string header, out string footer, out string attachementFile)
         {
             using (OracleConnection con = new OracleConnection(_configuration.GetConnectionString("DefaultConnection")))
             {
                 con.Open();
-                using (OracleCommand cmd = new OracleCommand("CSNET_PLUS_REPORT_PKG.submit_reject", con))
+
+                using (OracleCommand cmd = new OracleCommand("CSNET_PLUS_MAIL_PKG.generate_mail_data", con))
                 {
-                    //cmd.CommandType = CommandType.StoredProcedure;
-                    //string receiptNos = string.Join(",", request.GSFS_Receipt_Nos);
-                    //cmd.Parameters.Add("p_audit_type_id", OracleDbType.Int32).Value = request.AuditTypeId;
-                    //cmd.Parameters.Add("p_gsfs_receipt_nos", OracleDbType.Varchar2).Value = receiptNos;//cmd.Parameters.Add("p_action", OracleDbType.Varchar2).Value = "SUBMIT_TO_BRANCH";//cmd.Parameters.Add("p_msg", OracleDbType.Varchar2, 500).Direction = ParameterDirection.Output;cmd.ExecuteNonQueryAsync();
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.Add("p_user_id", OracleDbType.Varchar2).Value = userId;
+
+                    cmd.Parameters.Add("p_process", OracleDbType.Varchar2).Value = process;
+
+                    cmd.Parameters.Add("p_session_id", OracleDbType.Varchar2).Value = sessionId;
+
+                    cmd.Parameters.Add("p_gsfs_receipt_nos", OracleDbType.Varchar2).Value = receiptNos;
+
                     FromEmail = string.Empty;
                     toEmail = string.Empty;
                     CcEmail = string.Empty;
@@ -65,13 +74,11 @@ namespace CallAuditPortal1.Service.DAL
                     attachementFile = string.Empty;
 
 
-
-
                     cmd.CommandType = CommandType.StoredProcedure;
 
-                    cmd.Parameters.Add("p_receipt_no",
-                        OracleDbType.Varchar2).Value = recepeNo;
-
+                    cmd.Parameters.Add("p_userid",
+                        OracleDbType.Varchar2).Value = userId;
+                   
                     cmd.Parameters.Add("o_msg",
                         OracleDbType.Varchar2,
                         4000).Direction = ParameterDirection.Output;
@@ -82,77 +89,6 @@ namespace CallAuditPortal1.Service.DAL
                 }
             }
         }
-        
-        //public static void SendingEmail(Email email, IConfiguration configuration)
-        //{
-        //    try
-        //    {
-        //        string eMailServer = configuration["EmailServer"];
-
-        //        string eMailSender =
-        //            string.IsNullOrWhiteSpace(email.From)
-        //            ? configuration["EmailSupport"]
-        //            : email.From;
-
-        //        using (MailMessage mailMsg = new MailMessage())
-        //        {
-        //            // To
-        //            if (!string.IsNullOrWhiteSpace(email.To))
-        //            {
-        //                mailMsg.To.Add(email.To);
-        //            }
-
-        //            // CC
-        //            if (!string.IsNullOrWhiteSpace(email.CC))
-        //            {
-        //                foreach (string cc in email.CC.Split(','))
-        //                {
-        //                    if (!string.IsNullOrWhiteSpace(cc))
-        //                    {
-        //                        mailMsg.CC.Add(cc.Trim());
-        //                    }
-        //                }
-        //            }
-
-        //            mailMsg.From = new MailAddress(eMailSender);
-        //            mailMsg.Subject = email.MailSubject;
-        //            mailMsg.Body = email.MailBody;
-        //            mailMsg.IsBodyHtml = true;
-
-        //            // Single Attachment
-        //            if (!string.IsNullOrWhiteSpace(email.AttachmentFileName)
-        //                && File.Exists(email.AttachmentFileName))
-        //            {
-        //                mailMsg.Attachments.Add(
-        //                    new Attachment(email.AttachmentFileName));
-        //            }
-
-        //            // Multiple Attachments
-        //            if (email.Attachments != null)
-        //            {
-        //                foreach (string file in email.Attachments)
-        //                {
-        //                    if (!string.IsNullOrWhiteSpace(file)
-        //                        && File.Exists(file))
-        //                    {
-        //                        mailMsg.Attachments.Add(
-        //                            new Attachment(file));
-        //                    }
-        //                }
-        //            }
-
-        //            using (SmtpClient smtp = new SmtpClient(eMailServer))
-        //            {
-        //                smtp.Send(mailMsg);
-        //            }
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        throw new Exception(
-        //            "Error while sending email : " + ex.Message);
-        //    }
-        //}
 
         public async Task<string> Reject(RejectRequest request)
         {

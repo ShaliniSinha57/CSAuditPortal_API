@@ -25,9 +25,9 @@ builder.Services.AddScoped<OracleConnection>(x =>
 builder.Services.AddControllersWithViews();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 //builder.Services.AddOpenApi();
-builder.Services.AddTransient<DatabaseConnection>();
-builder.Services.AddTransient<AuditBAL>();
-builder.Services.AddTransient<AuditDAL>();
+builder.Services.AddScoped<DatabaseConnection>();
+builder.Services.AddScoped<AuditBAL>();
+builder.Services.AddScoped<AuditDAL>();
 builder.Services.AddScoped<IDataLoaderService, DataLoaderService>();
 builder.Services.AddScoped<IDataLoaderDAL, DataLoaderDAL>();
 builder.Services.AddScoped<IAuditMonitoringDAL, AuditMonitoringDAL>();
@@ -35,7 +35,7 @@ builder.Services.AddScoped<IAuditMonitoringService, AuditMonitoringService>();
 builder.Services.AddScoped<IReviewProcessDAL, ReviewProcessDAL>();
 builder.Services.AddScoped<IAuditEvaluationProcessDAL, AuditEvaluationProcessDAL>();
 builder.Services.AddScoped<IReportDAL, ReportDAL>();
-builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddSingleton<RazorViewRenderer>();
 
 
@@ -54,8 +54,12 @@ builder.Services.AddQuartz(q =>
     q.AddTrigger(opts => opts
         .ForJob(sendMailJobKey)
         .WithIdentity("SendMailRecordsTrigger")
-        .WithCronSchedule("0 0 1 * * ?"));
+        .WithCronSchedule("0/15 * * * * ?"));
 });
+
+
+
+
 
 builder.Services.AddQuartzHostedService(options =>
 {

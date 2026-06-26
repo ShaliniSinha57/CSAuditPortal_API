@@ -2,11 +2,12 @@
 using CallAuditPortal1.Service;
 using CallAuditPortal1.Service.Helper;
 using CallAuditPortal1.Service.Interface;
+using DocumentFormat.OpenXml.Office2016.Excel;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using PuppeteerSharp;
 using System.Data;
-using Microsoft.Extensions.Logging;
 
 namespace CallAuditPortal1.Controllers
 {
@@ -16,22 +17,22 @@ namespace CallAuditPortal1.Controllers
     {
         private readonly IAuditMonitoringService _auditMonitoringService;
         private readonly IAuditMonitoringDAL _auditMonitoringDAL;
-        private readonly EmailService _emailService;
         private readonly RazorViewRenderer _razorRenderer;
         private readonly ILogger<AuditMonitoringController> _logger;
+       
 
         public AuditMonitoringController(
             IAuditMonitoringService auditMonitoringService,
-            EmailService emailService,
+            //EmailService emailService,
             IAuditMonitoringDAL auditMonitoringDAL,
             RazorViewRenderer razorRenderer,
             ILogger<AuditMonitoringController> logger)
         {
             _auditMonitoringService = auditMonitoringService;
-            _emailService = emailService;
             _razorRenderer = razorRenderer;
             _auditMonitoringDAL = auditMonitoringDAL;
             _logger = logger;
+           
         }
 
 
@@ -42,10 +43,12 @@ namespace CallAuditPortal1.Controllers
             try
             {
                 var result = await _auditMonitoringService.SubmitToBranch(request);
+                var sendMailToBranch = await _auditMonitoringService.SendMailForSucessful("123", "Admin"); /*result.userid, result.role*/
                 return Ok(new
                 {
                     success = true,
-                    message = result
+                    message = result, 
+                    ismailSent = sendMailToBranch
                 });
             }
             catch (Exception ex)
@@ -53,72 +56,50 @@ namespace CallAuditPortal1.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
+
         //[HttpPost("SendMail")]
-        //public async Task<IActionResult> SendMail(string receiptNo)
-        //{
-        //    try
-        //    {
-        //        string toEmail, FromEmail, CcEmail, subject, header, footer, attachementFile;
-        //        var result = _auditMonitoringDAL.SubmitToBranchSendEmail(receiptNo, out toEmail, out FromEmail, out CcEmail, out subject, out header, out footer, out attachementFile);
+        //   public async Task<IActionResult> SendMail(string receiptNo)
+        //   {
+        //       try
+        //       {
+        //           string toEmail, FromEmail, CcEmail, subject, header, footer, attachementFile;
 
+        //           var result = _auditMonitoringDAL.SubmitToBranchSendEmail(
+        //               receiptNo,
+        //               out toEmail,
+        //               out FromEmail,
+        //               out CcEmail,
+        //               out subject,
+        //               out header,
+        //               out footer,
+        //               out attachementFile);
 
+        //           // Hardcoded values for testing
+        //           toEmail = "test@gmail.com";
+        //           FromEmail = "noreply@lg.com";
+        //           CcEmail = "test1@gmail.com";
+        //           subject = "Test Mail From CS Audit Portal";
+        //           attachementFile = null;
 
-        //        var html = await _razorRenderer.RenderAsync("Email_Templates/Successful.cshtml", new object { });
-        //        var htmlBody = html;
-        //        await _emailService.SendEmailAsync(fromEmail: FromEmail, toEmail: toEmail, ccEmail: CcEmail, subject: subject,
-        //         bodyHtml: htmlBody, attachementName: attachementFile);
-        //        return Ok();
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return StatusCode(500, ex.Message);
-        //    }
-        //}
+        //           var html = await _razorRenderer.RenderAsync(
+        //"Email_Templates/Successful.cshtml",
+        //new { });
 
+        //           await _emailService.SendEmailAsync(
+        //               fromEmail: FromEmail,
+        //               toEmail: toEmail,
+        //               ccEmail: CcEmail,
+        //               subject: subject,
+        //               bodyHtml: html,
+        //               attachementName: attachementFile);
 
-        [HttpPost("SendMail")]
-        public async Task<IActionResult> SendMail(string receiptNo)
-        {
-            try
-            {
-                string toEmail, FromEmail, CcEmail, subject, header, footer, attachementFile;
-
-                var result = _auditMonitoringDAL.SubmitToBranchSendEmail(
-                    receiptNo,
-                    out toEmail,
-                    out FromEmail,
-                    out CcEmail,
-                    out subject,
-                    out header,
-                    out footer,
-                    out attachementFile);
-
-                // Hardcoded values for testing
-                toEmail = "yourmail@gmail.com";
-                FromEmail = "noreply@lg.com";
-                CcEmail = "yourcc@gmail.com";
-                subject = "Test Mail From CS Audit Portal";
-                attachementFile = null;
-
-                var html = await _razorRenderer.RenderAsync(
-     "Email_Templates/Successful.cshtml",
-     new { });
-
-                await _emailService.SendEmailAsync(
-                    fromEmail: FromEmail,
-                    toEmail: toEmail,
-                    ccEmail: CcEmail,
-                    subject: subject,
-                    bodyHtml: html,
-                    attachementName: attachementFile);
-
-                return Ok("Mail Sent Successfully");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.ToString());
-            }
-        }
+        //           return Ok("Mail Sent Successfully");
+        //       }
+        //       catch (Exception ex)
+        //       {
+        //           return StatusCode(500, ex.ToString());
+        //       }
+        //   }
 
 
         [HttpPost("Reject")]

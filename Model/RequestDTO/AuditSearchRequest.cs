@@ -31,10 +31,18 @@
         public string MailSubject { get; set; }
 
         public string MailBody { get; set; }
+        public string ShipToCode { get; set; } = string.Empty;
+
+        public string AuditMonth { get; set; } = string.Empty;
+
+        public string AuditYear { get; set; } = string.Empty;
+
+        public string LastDate { get; set; } = string.Empty;
 
         public string AttachmentFileName { get; set; }
 
         public List<string> Attachments { get; set; } = new();
+        public List<MailDynamicRow> Rows { get; set; } = new();
     }
     public class SmtpSettings
     {
@@ -52,6 +60,8 @@
         public bool Success { get; set; }
         public string SuccessDetails { get; set; }
     }
+
+  
     public class RejectRequest
     {
         public int AuditTypeId { get; set; }
