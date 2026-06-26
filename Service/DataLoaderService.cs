@@ -94,18 +94,17 @@ namespace CallAuditPortal1.Service
                         for (int row = 2; row <= rowCount; row++)
                         {
                             DataRow dr = dt.NewRow();
+                            bool hasData = false;
 
-                            dr["TEMPLATE_ID"] = request.AuditTypeId;
-                            dr["SESSION_ID"] = sessionId;
-                            dr["PROCESS_FLAG"] = "N";
-                            dr["AUDIT_DATE"] = request.FromDate;
-                            dr["ROW_NO"] = row-1;
+                            
 
                             foreach(var item in tableColumns)
                             {
                                 if(excelHeaderMap.TryGetValue(item.EXCEL_COLUMN_NAME.ToUpper(), out int colNo))
                                 {
                                     string value = worksheet.Cells[row, colNo].Text?.Trim();
+                                    if (!string.IsNullOrWhiteSpace(value))
+                                        hasData = true;
                                     dr[item.DB_COLUMN] = string.IsNullOrWhiteSpace(value) ? DBNull.Value : value;
                                 }
                                 else
@@ -114,6 +113,14 @@ namespace CallAuditPortal1.Service
                                 }
                             }
 
+                            if (!hasData)
+                                continue;
+
+                            dr["TEMPLATE_ID"] = request.AuditTypeId;
+                            dr["SESSION_ID"] = sessionId;
+                            dr["PROCESS_FLAG"] = "N";
+                            dr["AUDIT_DATE"] = request.FromDate;
+                            dr["ROW_NO"] = row - 1;
                             dt.Rows.Add(dr);
                            
                         }
@@ -141,9 +148,10 @@ namespace CallAuditPortal1.Service
                                 }
                                 trans.Commit();
                             }
-                            catch
+                            catch(Exception ex)
                             {
                                 trans.Rollback();
+                                Console.WriteLine(ex);
                                 throw;
                             }
                         }
