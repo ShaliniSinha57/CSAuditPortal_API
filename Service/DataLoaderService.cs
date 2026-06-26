@@ -1,5 +1,8 @@
 using CallAuditPortal1.Model.RequestDTO;
+using CallAuditPortal1.Model.ResponseDTO;
 using CallAuditPortal1.Service.Interface;
+using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Spreadsheet;
 using OfficeOpenXml;
 using Oracle.ManagedDataAccess.Client;
 using System.Data;
@@ -16,11 +19,21 @@ namespace CallAuditPortal1.Service
             _configuration = configuration;
             _dataLoaderDAL = dataLoaderDAL;
         }
-        public async Task<(string result, string session_Id)> InsertDataIntoTempTable(AuditUploadClaimRequest request)
+        public async Task<UploadResponse> InsertDataIntoTempTable(AuditUploadClaimRequest request)
         {
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
             try
             {
                 string sessionId = "";
+                var tableColumns = await _dataLoaderDAL.FetchTemplateColumnsAsync(Convert.ToInt32(request.AuditTypeId));
+                if (tableColumns == null || tableColumns.Count == 0)
+                {
+                    return new UploadResponse
+                    {
+                        Message = "Invalid audit type."
+                    };
+                }
                 using (OracleConnection con = new OracleConnection(
                     _configuration.GetConnectionString("DefaultConnection")))
                 {
@@ -31,7 +44,6 @@ namespace CallAuditPortal1.Service
                         sessionId = Convert.ToString(await cmd.ExecuteScalarAsync());
                         string sessionid = sessionId;
                     }
-
                     ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
                     using var stream = request.File.OpenReadStream();
                     using (var package = new ExcelPackage(stream))
@@ -39,52 +51,76 @@ namespace CallAuditPortal1.Service
                         ExcelWorksheet worksheet = package.Workbook.Worksheets[0];
                         if (worksheet == null)
                         {
-                            return ("Worksheet not found.", "");
+                            return new UploadResponse
+                            {
+                                Message = "Worksheet not found."
+                            };
                         }
                         if (worksheet.Dimension == null)
                         {
-                            return ("Excel sheet is empty.", "");
+                            return new UploadResponse
+                            {
+                                Message = "Excel sheet is empty."
+                            };
                         }
                         int rowCount = worksheet.Dimension.Rows;
                         int colCount = Math.Min(worksheet.Dimension.Columns, 148);
                         DataTable dt = new DataTable();
 
-                        dt.Columns.Add("ATTRIBUTE1");
-                        dt.Columns.Add("ATTRIBUTE2");
-                        dt.Columns.Add("CREATION_DATE", typeof(DateTime));
-                        dt.Columns.Add("CREATED_BY");
-
-                        for (int i = 3; i <= 150; i++)
+                        dt.Columns.Add("TEMPLATE_ID");
+                        dt.Columns.Add("SESSION_ID");
+                        dt.Columns.Add("PROCESS_FLAG");
+                        dt.Columns.Add("AUDIT_DATE");
+                        dt.Columns.Add("ROW_NO");
+                        foreach(var item in tableColumns)
                         {
-                            dt.Columns.Add($"ATTRIBUTE{i}");
+                            dt.Columns.Add(item.DB_COLUMN);
                         }
+
+                        Dictionary<string, int> excelHeaderMap = new Dictionary<string, int>();
+                        
+                        for (int col = 1; col <= colCount; col++)
+                        {
+                            string header = worksheet.Cells[1, col].Text?.Trim();
+
+                            if (!string.IsNullOrWhiteSpace(header))
+                            {
+                                excelHeaderMap[header.ToUpper()] = col;
+                            }
+                        }
+
+
+
                         for (int row = 2; row <= rowCount; row++)
                         {
                             DataRow dr = dt.NewRow();
+                            bool hasData = false;
 
-                            dr["ATTRIBUTE1"] = sessionId;
-                            dr["ATTRIBUTE2"] = request.AuditTypeId;
-                            dr["CREATION_DATE"] = DateTime.Now;
-                            dr["CREATED_BY"] = "SYSTEM_USER";
+                            
 
-                            int attributeIndex = 3;
-
-                            for (int col = 1; col <= colCount; col++)
+                            foreach(var item in tableColumns)
                             {
-
-                                if (attributeIndex > 150)
+                                if(excelHeaderMap.TryGetValue(item.EXCEL_COLUMN_NAME.ToUpper(), out int colNo))
                                 {
-                                    break;
+                                    string value = worksheet.Cells[row, colNo].Text?.Trim();
+                                    if (!string.IsNullOrWhiteSpace(value))
+                                        hasData = true;
+                                    dr[item.DB_COLUMN] = string.IsNullOrWhiteSpace(value) ? DBNull.Value : value;
                                 }
-                                string value = worksheet.Cells[row, col].Text?.Trim();
-
-                                dr[$"ATTRIBUTE{attributeIndex}"] =
-                                    string.IsNullOrWhiteSpace(value)
-                                        ? DBNull.Value
-                                        : (object)value;
-
-                                attributeIndex++;
+                                else
+                                {
+                                    dr[item.DB_COLUMN] = DBNull.Value;
+                                }
                             }
+
+                            if (!hasData)
+                                continue;
+
+                            dr["TEMPLATE_ID"] = request.AuditTypeId;
+                            dr["SESSION_ID"] = sessionId;
+                            dr["PROCESS_FLAG"] = "N";
+                            dr["AUDIT_DATE"] = request.FromDate;
+                            dr["ROW_NO"] = row - 1;
                             dt.Rows.Add(dr);
                            
                         }
@@ -94,51 +130,128 @@ namespace CallAuditPortal1.Service
                             {
                                 using (OracleBulkCopy bulkCopy = new OracleBulkCopy(con))
                                 {
-                                    bulkCopy.DestinationTableName = "CSNET_PLUS_INTERFACE_ALL";
+                                    bulkCopy.DestinationTableName = tableColumns.FirstOrDefault().STG_TABLE;
 
                                     bulkCopy.BatchSize = 1000;
                                     bulkCopy.BulkCopyTimeout = 0;
-                                    bulkCopy.ColumnMappings.Add("ATTRIBUTE1", "ATTRIBUTE1");
-                                    bulkCopy.ColumnMappings.Add("ATTRIBUTE2", "ATTRIBUTE2");
-                                    bulkCopy.ColumnMappings.Add("CREATION_DATE", "CREATION_DATE");
-                                    bulkCopy.ColumnMappings.Add("CREATED_BY", "CREATED_BY");
+                                    bulkCopy.ColumnMappings.Add("TEMPLATE_ID", "TEMPLATE_ID");
+                                    bulkCopy.ColumnMappings.Add("SESSION_ID", "SESSION_ID");
+                                    bulkCopy.ColumnMappings.Add("PROCESS_FLAG", "PROCESS_FLAG");
+                                    bulkCopy.ColumnMappings.Add("AUDIT_DATE", "AUDIT_DATE");
+                                    bulkCopy.ColumnMappings.Add("ROW_NO", "ROW_NO");
 
-                                    for (int i = 3; i <= 150; i++)
+                                    foreach(var item in tableColumns)
                                     {
-                                        bulkCopy.ColumnMappings.Add(
-                                            $"ATTRIBUTE{i}",
-                                            $"ATTRIBUTE{i}");
+                                        bulkCopy.ColumnMappings.Add(item.DB_COLUMN, item.DB_COLUMN);
                                     }
-
                                     bulkCopy.WriteToServer(dt);
                                 }
                                 trans.Commit();
                             }
-                            catch
+                            catch(Exception ex)
                             {
                                 trans.Rollback();
+                                Console.WriteLine(ex);
                                 throw;
                             }
                         }
                         
                     }
+                    sw.Stop();
+                    Console.WriteLine($"staging table insertion time: {sw.Elapsed.TotalSeconds} seconds");
 
-                    var uploadProcess = await _dataLoaderDAL.UploadData(sessionId, request.AuditTypeId, request.FromDate, "System_user");
+                    sw.Start();
+                    var uploadProcess = await _dataLoaderDAL.UploadData(sessionId, request.AuditTypeId, "System_user");
+                    sw.Stop();
+                    Console.WriteLine($"Transfer to main table time : {sw.Elapsed.TotalSeconds} seconds");
 
-                    //return
-                    //    $"Data inserted successfully. Session ID : {sessionId}";
-                    if (!string.IsNullOrEmpty(uploadProcess))
+                    return new UploadResponse
                     {
-                        return (uploadProcess, sessionId);
-                    }
-                    else
-                    {
-                        return
-                            ($"Data inserted successfully. Session ID : {sessionId}", "");
-                    }
+                        Message = uploadProcess.message,
+                        Status = uploadProcess.status,
+                        SessionId = sessionId,
+                        Inserted = uploadProcess.insertCount,
+                        Updated = uploadProcess.updatecount,
+                        Error = uploadProcess.errorCount
+                    };
                 }
             }
             catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task<(byte[] bytes, string fileName)> DownloadErrorRows(int templateId, int sessionId)
+        {
+            try
+            {
+                var data = await _dataLoaderDAL.GetErrorData(templateId, sessionId);
+
+                if (data == null || data.Count == 0)
+                    return (null, "");
+
+                var excelHeader = await _dataLoaderDAL.FetchTemplateColumnsAsync(templateId);
+
+                var orderedHeaderData = excelHeader.OrderBy(d => d.EXCEL_COLUMN_NO).ToList();
+                string templateName = orderedHeaderData.FirstOrDefault().STG_TABLE;
+
+                using (XLWorkbook wb = new XLWorkbook())
+                {
+                    var worksheet = wb.Worksheets.Add(templateName);
+                    int colIndex = 1;
+
+                    foreach (var item in orderedHeaderData)
+                    {
+                        worksheet.Cell(1, colIndex).Value = item.EXCEL_COLUMN_NAME;
+                        worksheet.Cell(1, colIndex).Style.Font.Bold = true;
+                        colIndex++;
+                    }
+
+                    worksheet.Cell(1, colIndex).Value = "Error";
+                    worksheet.Cell(1, colIndex).Style.Font.Bold = true;
+                    colIndex++;
+
+                    int rowIndex = 2;
+
+                    foreach (IDictionary<string, object> row in data)
+                    {
+                        colIndex = 1;
+
+                        foreach (var header in orderedHeaderData)
+                        {
+                            // Assuming the Oracle cursor column names match EXCEL_COLUMN_NAME
+                            if (row.TryGetValue(header.DB_COLUMN, out var value))
+                            {
+                                worksheet.Cell(rowIndex, colIndex).Value = value?.ToString() ?? "";
+                            }
+                            else
+                            {
+                                worksheet.Cell(rowIndex, colIndex).Value = "";
+                            }
+
+                            colIndex++;
+                        }
+
+                        // Write Error column
+                        if (row.TryGetValue("ERR", out var errorValue))
+                        {
+                            worksheet.Cell(rowIndex, colIndex).Value = errorValue?.ToString() ?? "";
+                        }
+
+                        rowIndex++;
+                    }
+
+                    worksheet.Columns().AdjustToContents();
+                    using (var stream = new MemoryStream())
+                    {
+                        wb.SaveAs(stream);
+                        return (stream.ToArray(), templateName);
+                    }
+                }
+
+            }
+            catch
             {
                 throw;
             }
@@ -167,22 +280,6 @@ namespace CallAuditPortal1.Service
                 Reason = request.Reason,
                 SelectedIds = request.SelectedIds
             });
-        }
-        //public string DownloadTemplate(int auditTypeId)
-        //{
-        //    try
-        //    {
-        //        return _dataLoaderDAL.DownloadTemplate(auditTypeId);
-        //    }
-        //    catch (Exception)
-        //    {
-        //        throw;
-        //    }
-        //}
-
-        Task<string> IDataLoaderService.DownloadTemplate(int auditTypeId)
-        {
-            throw new NotImplementedException();
         }
     }
 

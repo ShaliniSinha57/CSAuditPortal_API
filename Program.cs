@@ -3,10 +3,9 @@ using CallAuditPortal1.Service;
 using CallAuditPortal1.Service.BAL;
 using CallAuditPortal1.Service.DAL;
 using CallAuditPortal1.Service.Interface;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
-using Quartz;
 using Oracle.ManagedDataAccess.Client;
-using CallAuditPortal1.Service.BAL.Schedular;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddScoped<OracleConnection>(x =>
@@ -31,28 +30,19 @@ builder.Services.AddScoped<IAuditEvaluationProcessDAL, AuditEvaluationProcessDAL
 builder.Services.AddScoped<IFileUploadBAL, FileUploadBAL>();
 builder.Services.AddScoped<IReportDAL,ReportDAL>();
 
-
 builder.Services.AddDbContext<DbContext>(options =>
 {
   options.UseOracle(builder.Configuration.GetConnectionString("OracleConnection"));
 });
 
-// Add Schedular
-
-builder.Services.AddQuartz(q =>
+builder.Services.Configure<FormOptions>(options =>
 {
-    var sendMailJobKey = new JobKey("SendMailSchedular");
-
-    q.AddJob<SendMailSchedular>(opts => opts.WithIdentity(sendMailJobKey));
-    q.AddTrigger(opts => opts
-        .ForJob(sendMailJobKey)
-        .WithIdentity("SendMailRecordsTrigger")
-        .WithCronSchedule("0 0 1 * * ?"));
+    options.MultipartBodyLengthLimit = 100 * 1024 * 1024; // 100 MB
 });
 
-builder.Services.AddQuartzHostedService(options =>
+builder.WebHost.ConfigureKestrel(options =>
 {
-    options.WaitForJobsToComplete = true;
+    options.Limits.MaxRequestBodySize = 100 * 1024 * 1024; // 100 MB
 });
 // Add Swagger services
 builder.Services.AddEndpointsApiExplorer();

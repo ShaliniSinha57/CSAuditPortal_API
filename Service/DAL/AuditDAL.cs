@@ -60,34 +60,5 @@ namespace CallAuditPortal1.Service.DAL
             }
         }
 
-        public async Task<string> DownloadTemplate(int auditTypeId)
-        {
-            try
-            {
-                using(OracleConnection con = new OracleConnection(_configuration.GetConnectionString("DefaultConnection")))
-                {
-                    await con.OpenAsync();
-                    using(OracleCommand cmd = new OracleCommand("csnet_plus_master_pkg.get_template_file_path", con))
-                    {
-                        cmd.CommandType = CommandType.StoredProcedure;
-                        cmd.Parameters.Add("p_audit_type_id", OracleDbType.Int32).Value = auditTypeId;
-                        cmd.Parameters.Add("p_path", OracleDbType.Varchar2, 4000).Direction = ParameterDirection.Output;
-                        cmd.Parameters.Add("p_msg", OracleDbType.Varchar2, 4000).Direction = ParameterDirection.Output;
-
-                        await cmd.ExecuteNonQueryAsync();
-
-                        string errMsg = cmd.Parameters["p_msg"].Value.ToString();
-                        return cmd.Parameters["p_path"].Value.ToString();
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-        }
-
-
-
     }
 }
