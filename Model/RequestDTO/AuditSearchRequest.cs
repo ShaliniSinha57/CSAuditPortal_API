@@ -13,25 +13,35 @@
     }
    
 
-        public class SubmitBranchRequest
+    public class SubmitBranchRequest
         {
         public int AuditTypeId { get; set; }
         //public List<string> GSFS_Receipt_Nos { get; set; }
         public List<string> GSFS_Receipt_Nos { get; set; } = new();
     }
-   
+
     public class Email
     {
-        public string To { get; set; }
+        // Mail Details
+        public string To { get; set; } = string.Empty;
 
-        public string CC { get; set; }
+        public string CC { get; set; } = string.Empty;
 
-        public string From { get; set; }
+        public string From { get; set; } = string.Empty;
 
-        public string MailSubject { get; set; }
+        public string MailSubject { get; set; } = string.Empty;
 
-        public string MailBody { get; set; }
+        public string MailBody { get; set; } = string.Empty;
+
+        public string Header { get; set; } = string.Empty;
+
+        public string Footer { get; set; } = string.Empty;
+
+        // Audit Details
+        public string Process { get; set; } = string.Empty;
         public string ShipToCode { get; set; } = string.Empty;
+
+        public string CompanyName { get; set; } = string.Empty;
 
         public string AuditMonth { get; set; } = string.Empty;
 
@@ -39,9 +49,16 @@
 
         public string LastDate { get; set; } = string.Empty;
 
-        public string AttachmentFileName { get; set; }
+        public string EventType { get; set; } = string.Empty;
+
+        public string SessionId { get; set; } = string.Empty;
+
+        // Attachment
+        public string AttachmentFileName { get; set; } = string.Empty;
 
         public List<string> Attachments { get; set; } = new();
+
+        // Dynamic Table Data
         public List<MailDynamicRow> Rows { get; set; } = new();
     }
     public class SmtpSettings

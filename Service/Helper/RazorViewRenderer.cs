@@ -1,5 +1,6 @@
 ﻿using RazorLight;
 
+
 namespace CallAuditPortal1.Service.Helper
 {
     public class RazorViewRenderer

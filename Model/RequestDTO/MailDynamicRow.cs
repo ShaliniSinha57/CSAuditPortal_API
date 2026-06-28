@@ -8,8 +8,6 @@
 
         public int RejectedCount { get; set; }
 
-        public string EscName { get; set; } = string.Empty;
-
         public int FeedbackSubmitCount { get; set; }
 
         public int NewUpload { get; set; }
@@ -17,7 +15,37 @@
         public int PreviousPending { get; set; }
 
         public int Total { get; set; }
-
     }
+
+    public class MailResponseModel
+    {
+        public string ShipToCode { get; set; } = string.Empty;
+
+        public string AuditMonth { get; set; } = string.Empty;
+
+        public string ValidTill { get; set; } = string.Empty;
+
+        public string CompanyName { get; set; } = string.Empty;
+
+        public string MailTo { get; set; } = string.Empty;
+
+        public string MailCc { get; set; } = string.Empty;
+
+        public string Subject { get; set; } = string.Empty;
+
+        public string Header { get; set; } = string.Empty;
+
+        public string Footer { get; set; } = string.Empty;
+
+        public string AttachmentFile { get; set; } = string.Empty;
+
+        public string EventType { get; set; } = string.Empty;
+
+        public string CreatedBy { get; set; } = string.Empty;
+
+        public List<MailDynamicRow> Rows { get; set; } = new();
+    }
+
    
+
 }

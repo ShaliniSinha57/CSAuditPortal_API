@@ -21,16 +21,14 @@ namespace CallAuditPortal1.Service.BAL.Schedular
             _auditMonitoringService = auditMonitoringService;
         }
 
-        public async Task Execute(IJobExecutionContext context)
+       
+       public async Task Execute(IJobExecutionContext context)
         {
+            string sessionId = Guid.NewGuid().ToString();
 
-            {
-                await _auditMonitoringService.SendMailForAccepted("123","admin");
-                await _auditMonitoringService.SendMailForFeedback("123", "admin");
-                await _auditMonitoringService.SendMailForRejected("123", "admin");
-                await Task.CompletedTask;
-               
-            }
+            await _auditMonitoringService.SendMailByScreenType("SYSTEM", "HO_ACCEPT", sessionId);
+            await _auditMonitoringService.SendMailByScreenType("SYSTEM", "HO_REJECT", sessionId);
+            await _auditMonitoringService.SendMailByScreenType("SYSTEM", "FEEDBACK_ESC_LGC", sessionId);
 
         }
     }

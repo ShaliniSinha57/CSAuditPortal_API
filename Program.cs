@@ -39,32 +39,28 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddSingleton<RazorViewRenderer>();
 
 
-//builder.Services.AddDbContext<DbContext>(options =>
-//{
-//    options.UseOracle(builder.Configuration.GetConnectionString("OracleConnection"));
-//});
-
-// Add Schedular
 
 builder.Services.AddQuartz(q =>
 {
-    var sendMailJobKey = new JobKey("SendMailSchedular");
+    var jobKey = new JobKey("SendMailSchedular");
 
-    q.AddJob<SendMailSchedular>(opts => opts.WithIdentity(sendMailJobKey));
+    q.AddJob<SendMailSchedular>(opts =>
+        opts.WithIdentity(jobKey));
+
     q.AddTrigger(opts => opts
-        .ForJob(sendMailJobKey)
-        .WithIdentity("SendMailRecordsTrigger")
-        .WithCronSchedule("0/15 * * * * ?"));
+        .ForJob(jobKey)
+        .WithIdentity("SendMailTrigger")
+
+        // Every day at 7 PM
+        .WithCronSchedule("0 0 19 * * ?"));
 });
-
-
-
-
 
 builder.Services.AddQuartzHostedService(options =>
 {
     options.WaitForJobsToComplete = true;
 });
+
+
 // Add Swagger services
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

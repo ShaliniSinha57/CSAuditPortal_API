@@ -20,203 +20,282 @@ namespace CallAuditPortal1.Service
             _emailService = emailService;
             _razorRenderer = razorRenderer;
         }
-        
+
         public async Task<string> SubmitToBranch(SubmitBranchRequest request)
         {
             return await _auditMonitoringDAL.SubmitToBranch(request);
         }
-       
+        
         public async Task<string> Reject(RejectRequest request)
         {
             return await _auditMonitoringDAL.Reject(request);
         }
-
-        //public async Task<byte[]> Download(DownloadRequest request)
-        //{
-        //    return await _auditMonitoringDAL.Download(request);
-        //}
-       
 
         public Task<byte[]> Download(DownloadRequest request)
         {
             return  _auditMonitoringDAL.Download(request);
         }
 
-        public async Task<bool> SendMailForSucessful(string userid, string role)
+        //   public async Task<bool> SendMailForSucessful(string userid, string role)
+        //   {
+        //       bool isMailSend = false;
+        //       try
+        //       {
+        //           string toEmail, FromEmail, CcEmail, subject, header, footer, attachementFile;
+
+        //           //var result = _auditMonitoringDAL.SubmitToBranchSendEmail(
+        //           //   userid, role,
+        //           //    out toEmail,
+        //           //    out FromEmail,
+        //           //    out CcEmail,
+        //           //    out subject,
+        //           //    out header,
+        //           //    out footer,
+        //           //    out attachementFile);
+
+        //           // Hardcoded values for testing
+        //           toEmail = "shalini.sinha@neuheittechnologies.com";
+        //           FromEmail = "shalini.sinha@neuheittechnologies.com";
+        //           CcEmail = "";
+        //           subject = "Test Mail From CS Audit Portal";
+        //           attachementFile = null;
+
+        //           var html = await _razorRenderer.RenderAsync(
+        //"Email_Templates/Successful.cshtml",
+        //new { });
+
+        //           await _emailService.SendEmailAsync(
+        //               fromEmail: FromEmail,
+        //               toEmail: toEmail,
+        //               ccEmail: CcEmail,
+        //               subject: subject,
+        //               bodyHtml: html,
+        //               attachementName: attachementFile);
+
+        //           return isMailSend= true;
+        //       }
+        //       catch (Exception ex)
+        //       {
+        //           return isMailSend = false;
+        //       }
+        //   }
+
+        //   public async Task<bool> SendMailForAccepted(string userid, string role)
+        //   {
+        //       bool isMailSend = false;
+        //       try
+        //       {
+        //           string toEmail, FromEmail, CcEmail, subject, header, footer, attachementFile;
+
+        //           //var result = _auditMonitoringDAL.SubmitToBranchSendEmail(
+        //           //   userid, role,
+        //           //    out toEmail,
+        //           //    out FromEmail,
+        //           //    out CcEmail,
+        //           //    out subject,
+        //           //    out header,
+        //           //    out footer,
+        //           //    out attachementFile);
+
+        //           // Hardcoded values for testing
+        //           toEmail = "shalini.sinha@neuheittechnologies.com";
+        //           FromEmail = "shalini.sinha@neuheittechnologies.com";
+        //           CcEmail = "";
+        //           subject = "Test Mail From CS Audit Portal";
+        //           attachementFile = null;
+
+        //           var html = await _razorRenderer.RenderAsync(
+        //"Email_Templates/Accepted_HO.cshtml",
+        //new { });
+
+        //           await _emailService.SendEmailAsync(
+        //               fromEmail: FromEmail,
+        //               toEmail: toEmail,
+        //               ccEmail: CcEmail,
+        //               subject: subject,
+        //               bodyHtml: html,
+        //               attachementName: attachementFile);
+
+        //           return isMailSend = true;
+        //       }
+        //       catch (Exception ex)
+        //       {
+        //           return isMailSend = false;
+        //       }
+        //   }
+
+        //   public async Task<bool> SendMailForFeedback(string userid, string role)
+        //   {
+        //       bool isMailSend = false;
+        //       try
+        //       {
+        //           string toEmail, FromEmail, CcEmail, subject, header, footer, attachementFile;
+
+        //           //var result = _auditMonitoringDAL.SubmitToBranchSendEmail(
+        //           //   userid, role,
+        //           //    out toEmail,
+        //           //    out FromEmail,
+        //           //    out CcEmail,
+        //           //    out subject,
+        //           //    out header,
+        //           //    out footer,
+        //           //    out attachementFile);
+
+        //           // Hardcoded values for testing
+        //           toEmail = "shalini.sinha@neuheittechnologies.com";
+        //           FromEmail = "shalini.sinha@neuheittechnologies.com";
+        //           CcEmail = "";
+        //           subject = "Test Mail From CS Audit Portal";
+        //           attachementFile = null;
+
+        //           var html = await _razorRenderer.RenderAsync(
+        //"Email_Templates/Feedback.cshtml",
+        //new { });
+
+        //           await _emailService.SendEmailAsync(
+        //               fromEmail: FromEmail,
+        //               toEmail: toEmail,
+        //               ccEmail: CcEmail,
+        //               subject: subject,
+        //               bodyHtml: html,
+        //               attachementName: attachementFile);
+
+        //           return isMailSend = true;
+        //       }
+        //       catch (Exception ex)
+        //       {
+        //           return isMailSend = false;
+        //       }
+        //   }
+        //   public async Task<bool> SendMailForRejected(string userid, string role)
+        //   {
+        //       bool isMailSend = false;
+        //       try
+        //       {
+        //           string toEmail, FromEmail, CcEmail, subject, header, footer, attachementFile;
+
+        //           //var result = _auditMonitoringDAL.SubmitToBranchSendEmail(
+        //           //   userid, role,
+        //           //    out toEmail,
+        //           //    out FromEmail,
+        //           //    out CcEmail,
+        //           //    out subject,
+        //           //    out header,
+        //           //    out footer,
+        //           //    out attachementFile);
+
+        //           // Hardcoded values for testing
+        //           toEmail = "shalini.sinha@neuheittechnologies.com";
+        //           FromEmail = "shalini.sinha@neuheittechnologies.com";
+        //           CcEmail = "";
+        //           subject = "Test Mail From CS Audit Portal";
+        //           attachementFile = null;
+
+        //           var html = await _razorRenderer.RenderAsync(
+        //"Email_Templates/Rejected_HO.cshtml",
+        //new { });
+
+        //           await _emailService.SendEmailAsync(
+        //               fromEmail: FromEmail,
+        //               toEmail: toEmail,
+        //               ccEmail: CcEmail,
+        //               subject: subject,
+        //               bodyHtml: html,
+        //               attachementName: attachementFile);
+
+        //           return isMailSend = true;
+        //       }
+        //       catch (Exception ex)
+        //       {
+        //           return isMailSend = false;
+        //       }
+        //   }
+        public async Task<bool> SendMailByScreenType(
+       string userId,
+       string process,
+       string sessionId,
+       string receiptNos = "")
         {
-            bool isMailSend = false;
             try
             {
-                string toEmail, FromEmail, CcEmail, subject, header, footer, attachementFile;
+                // Step 1 : Generate Mail Data
+                var result = await _auditMonitoringDAL.GenerateMailData(
+                    userId,
+                    process,
+                    sessionId,
+                    receiptNos);
 
-                //var result = _auditMonitoringDAL.SubmitToBranchSendEmail(
-                //   userid, role,
-                //    out toEmail,
-                //    out FromEmail,
-                //    out CcEmail,
-                //    out subject,
-                //    out header,
-                //    out footer,
-                //    out attachementFile);
+                if (!result.Equals("SUCCESS", StringComparison.OrdinalIgnoreCase))
+                    return false;
 
-                // Hardcoded values for testing
-                toEmail = "shalini.sinha@neuheittechnologies.com";
-                FromEmail = "shalini.sinha@neuheittechnologies.com";
-                CcEmail = "";
-                subject = "Test Mail From CS Audit Portal";
-                attachementFile = null;
+                // Step 2 : Read Mail Data
+                var mailList = await _auditMonitoringDAL.GetMailExcelData(
+                    process,
+                    sessionId);
 
-                var html = await _razorRenderer.RenderAsync(
-     "Email_Templates/Successful.cshtml",
-     new { });
+                foreach (var item in mailList)
+                {
+                    var emailModel = new Email
+                    {
+                        To = item.MailTo,
+                        CC = item.MailCc,
+                        MailSubject = item.Subject,
+                        Header = item.Header,
+                        Footer = item.Footer,
+                        ShipToCode = item.ShipToCode,
+                        CompanyName = item.CompanyName,
+                        AuditMonth = item.AuditMonth,
+                        LastDate = item.ValidTill,
+                        Rows = item.Rows
+                    };
 
-                await _emailService.SendEmailAsync(
-                    fromEmail: FromEmail,
-                    toEmail: toEmail,
-                    ccEmail: CcEmail,
-                    subject: subject,
-                    bodyHtml: html,
-                    attachementName: attachementFile);
+                    string template = GetTemplate(process);
 
-                return isMailSend= true;
+                    string html = await _razorRenderer.RenderAsync(
+                        template,
+                        emailModel);
+
+                    await _emailService.SendEmailAsync(
+                        fromEmail: "",
+                        toEmail: emailModel.To,
+                        ccEmail: emailModel.CC,
+                        subject: string.IsNullOrWhiteSpace(item.Subject)
+                                    ? GetSubject(process)
+                                    : item.Subject,
+                        bodyHtml: html,
+                        attachementName: item.AttachmentFile);
+                }
+
+                return true;
             }
-            catch (Exception ex)
+            catch
             {
-                return isMailSend = false;
+                return false;
             }
         }
-
-        public async Task<bool> SendMailForAccepted(string userid, string role)
+        private string GetTemplate(string process)
         {
-            bool isMailSend = false;
-            try
+            return process switch
             {
-                string toEmail, FromEmail, CcEmail, subject, header, footer, attachementFile;
-
-                //var result = _auditMonitoringDAL.SubmitToBranchSendEmail(
-                //   userid, role,
-                //    out toEmail,
-                //    out FromEmail,
-                //    out CcEmail,
-                //    out subject,
-                //    out header,
-                //    out footer,
-                //    out attachementFile);
-
-                // Hardcoded values for testing
-                toEmail = "shalini.sinha@neuheittechnologies.com";
-                FromEmail = "shalini.sinha@neuheittechnologies.com";
-                CcEmail = "";
-                subject = "Test Mail From CS Audit Portal";
-                attachementFile = null;
-
-                var html = await _razorRenderer.RenderAsync(
-     "Email_Templates/Accepted_HO.cshtml",
-     new { });
-
-                await _emailService.SendEmailAsync(
-                    fromEmail: FromEmail,
-                    toEmail: toEmail,
-                    ccEmail: CcEmail,
-                    subject: subject,
-                    bodyHtml: html,
-                    attachementName: attachementFile);
-
-                return isMailSend = true;
-            }
-            catch (Exception ex)
-            {
-                return isMailSend = false;
-            }
+                "SUBMIT_PROCESS" => "Email_Templates/Successful.cshtml",
+                "HO_ACCEPT" => "Email_Templates/Accepted_HO.cshtml",
+                "HO_REJECT" => "Email_Templates/Rejected_HO.cshtml",
+                "FEEDBACK_ESC_LGC" => "Email_Templates/Feedback.cshtml",
+                _ => throw new Exception("Invalid Process")
+            };
         }
 
-        public async Task<bool> SendMailForFeedback(string userid, string role)
+        private string GetSubject(string process)
         {
-            bool isMailSend = false;
-            try
+            return process switch
             {
-                string toEmail, FromEmail, CcEmail, subject, header, footer, attachementFile;
-
-                //var result = _auditMonitoringDAL.SubmitToBranchSendEmail(
-                //   userid, role,
-                //    out toEmail,
-                //    out FromEmail,
-                //    out CcEmail,
-                //    out subject,
-                //    out header,
-                //    out footer,
-                //    out attachementFile);
-
-                // Hardcoded values for testing
-                toEmail = "shalini.sinha@neuheittechnologies.com";
-                FromEmail = "shalini.sinha@neuheittechnologies.com";
-                CcEmail = "";
-                subject = "Test Mail From CS Audit Portal";
-                attachementFile = null;
-
-                var html = await _razorRenderer.RenderAsync(
-     "Email_Templates/Feedback.cshtml",
-     new { });
-
-                await _emailService.SendEmailAsync(
-                    fromEmail: FromEmail,
-                    toEmail: toEmail,
-                    ccEmail: CcEmail,
-                    subject: subject,
-                    bodyHtml: html,
-                    attachementName: attachementFile);
-
-                return isMailSend = true;
-            }
-            catch (Exception ex)
-            {
-                return isMailSend = false;
-            }
+                "SUBMIT_PROCESS" => "Audit Submitted Successfully",
+                "HO_ACCEPT" => "Audit Accepted",
+                "HO_REJECT" => "Audit Rejected",
+                "FEEDBACK_ESC_LGC" => "Feedback Submitted",
+                _ => "Audit Mail"
+            };
         }
-        public async Task<bool> SendMailForRejected(string userid, string role)
-        {
-            bool isMailSend = false;
-            try
-            {
-                string toEmail, FromEmail, CcEmail, subject, header, footer, attachementFile;
-
-                //var result = _auditMonitoringDAL.SubmitToBranchSendEmail(
-                //   userid, role,
-                //    out toEmail,
-                //    out FromEmail,
-                //    out CcEmail,
-                //    out subject,
-                //    out header,
-                //    out footer,
-                //    out attachementFile);
-
-                // Hardcoded values for testing
-                toEmail = "shalini.sinha@neuheittechnologies.com";
-                FromEmail = "shalini.sinha@neuheittechnologies.com";
-                CcEmail = "";
-                subject = "Test Mail From CS Audit Portal";
-                attachementFile = null;
-
-                var html = await _razorRenderer.RenderAsync(
-     "Email_Templates/Rejected_HO.cshtml",
-     new { });
-
-                await _emailService.SendEmailAsync(
-                    fromEmail: FromEmail,
-                    toEmail: toEmail,
-                    ccEmail: CcEmail,
-                    subject: subject,
-                    bodyHtml: html,
-                    attachementName: attachementFile);
-
-                return isMailSend = true;
-            }
-            catch (Exception ex)
-            {
-                return isMailSend = false;
-            }
-        }
-
     }
 
 
