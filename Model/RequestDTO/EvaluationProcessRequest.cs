@@ -6,6 +6,7 @@
         {
             public string GSFS_ReceiptNo { get; set; }
             public string AuditTypeId { get; set; }
+            //public string AttachmentName { get; set; }
             public string Status { get; set; }
             public string Remark { get; set; }
             public IFormFile? Attachement { get; set; }

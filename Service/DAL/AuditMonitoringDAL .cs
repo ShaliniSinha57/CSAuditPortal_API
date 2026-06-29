@@ -1,18 +1,13 @@
 ﻿using CallAuditPortal1.Model;
 using CallAuditPortal1.Model.RequestDTO;
 using CallAuditPortal1.Service.Interface;
-using DocumentFormat.OpenXml.Spreadsheet;
 using OfficeOpenXml;
 using Oracle.ManagedDataAccess.Client;
 using Oracle.ManagedDataAccess.Types;
 using System.Data;
-using System.Net;
-using System.Net.Mail;
-using static Microsoft.AspNetCore.Razor.Language.TagHelperMetadata;
+using System.Text.Json;
 using OracleCommand = Oracle.ManagedDataAccess.Client.OracleCommand;
 using OracleConnection = Oracle.ManagedDataAccess.Client.OracleConnection;
-using OracleDataAdapter = Oracle.ManagedDataAccess.Client.OracleDataAdapter;
-using OracleParameter = Oracle.ManagedDataAccess.Client.OracleParameter;
 
 
 
@@ -21,101 +16,45 @@ namespace CallAuditPortal1.Service.DAL
     public class AuditMonitoringDAL : IAuditMonitoringDAL
     {
         private readonly IConfiguration _configuration;
-        public AuditMonitoringDAL(IConfiguration configuration)
+        private readonly IEmailService _emailService;
+        public AuditMonitoringDAL(IConfiguration configuration, IEmailService emailService)
         {
             _configuration = configuration;
+            _emailService = emailService;
         }
-        public async Task<string> SubmitToBranch(SubmitBranchRequest request)
+        public async Task<(string msg, string sessionId)> SubmitToBranch(SubmitBranchRequest request)
         {
-            using (OracleConnection con = new OracleConnection(_configuration.GetConnectionString("DefaultConnection")))
-            {
-                await con.OpenAsync();
-                using (OracleCommand cmd = new OracleCommand("CSNET_PLUS_REPORT_PKG.submit_reject", con))
-                {
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    string receiptNos = string.Join(",", request.GSFS_Receipt_Nos);
-                    cmd.Parameters.Add("p_audit_type_id", OracleDbType.Int32).Value = request.AuditTypeId;
-                    cmd.Parameters.Add("p_gsfs_receipt_nos", OracleDbType.Varchar2).Value = receiptNos;
-                    cmd.Parameters.Add("p_action", OracleDbType.Varchar2).Value = "SUBMIT_TO_BRANCH";
-                    cmd.Parameters.Add("p_msg", OracleDbType.Varchar2, 500).Direction = ParameterDirection.Output;
-                    await cmd.ExecuteNonQueryAsync();
-                    var message = cmd.Parameters["p_msg"].Value?.ToString();
-                    return message;
-                }
+            using OracleConnection con = new OracleConnection(
+                _configuration.GetConnectionString("DefaultConnection"));
 
-            }
-        }
-        public static void SendingEmail(Email email, IConfiguration configuration)
-        {
-            try
-            {
-                string eMailServer = configuration["EmailServer"];
+            await con.OpenAsync();
 
-                string eMailSender =
-                    string.IsNullOrWhiteSpace(email.From)
-                    ? configuration["EmailSupport"]
-                    : email.From;
+            using OracleCommand cmd =
+                new OracleCommand("CSNET_PLUS_REPORT_PKG.submit_reject", con);
 
-                using (MailMessage mailMsg = new MailMessage())
-                {
-                    // To
-                    if (!string.IsNullOrWhiteSpace(email.To))
-                    {
-                        mailMsg.To.Add(email.To);
-                    }
+            cmd.CommandType = CommandType.StoredProcedure;
 
-                    // CC
-                    if (!string.IsNullOrWhiteSpace(email.CC))
-                    {
-                        foreach (string cc in email.CC.Split(','))
-                        {
-                            if (!string.IsNullOrWhiteSpace(cc))
-                            {
-                                mailMsg.CC.Add(cc.Trim());
-                            }
-                        }
-                    }
+            string receiptNos = string.Join(",", request.GSFS_Receipt_Nos);
 
-                    mailMsg.From = new MailAddress(eMailSender);
-                    mailMsg.Subject = email.MailSubject;
-                    mailMsg.Body = email.MailBody;
-                    mailMsg.IsBodyHtml = true;
+            cmd.Parameters.Add("p_audit_type_id", OracleDbType.Int32).Value = request.AuditTypeId;
+            cmd.Parameters.Add("p_gsfs_receipt_nos", OracleDbType.Varchar2).Value = receiptNos;
+            cmd.Parameters.Add("p_action",  OracleDbType.Varchar2).Value = "SUBMIT_PROCESS";
+            cmd.Parameters.Add("p_user_id", OracleDbType.Varchar2).Value = "testing";
+            cmd.Parameters.Add("p_msg", OracleDbType.Varchar2,500).Direction = ParameterDirection.Output;
+            cmd.Parameters.Add("p_session_id", OracleDbType.Varchar2,500).Direction = ParameterDirection.Output;
+            //cmd.Parameters.Add("p_success_receipts", OracleDbType.Varchar2,400).Direction = ParameterDirection.Output;
+            //cmd.Parameters.Add("p_error_receipts", OracleDbType.Varchar2,400).Direction = ParameterDirection.Output;
 
-                    // Single Attachment
-                    if (!string.IsNullOrWhiteSpace(email.AttachmentFileName)
-                        && File.Exists(email.AttachmentFileName))
-                    {
-                        mailMsg.Attachments.Add(
-                            new Attachment(email.AttachmentFileName));
-                    }
-
-                    // Multiple Attachments
-                    if (email.Attachments != null)
-                    {
-                        foreach (string file in email.Attachments)
-                        {
-                            if (!string.IsNullOrWhiteSpace(file)
-                                && File.Exists(file))
-                            {
-                                mailMsg.Attachments.Add(
-                                    new Attachment(file));
-                            }
-                        }
-                    }
-
-                    using (SmtpClient smtp = new SmtpClient(eMailServer))
-                    {
-                        smtp.Send(mailMsg);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(
-                    "Error while sending email : " + ex.Message);
-            }
+            await cmd.ExecuteNonQueryAsync();
+            string msg = DBHelper.GetString(cmd.Parameters, "p_msg");
+            string sessionId = DBHelper.GetString(cmd.Parameters, "p_session_id");
+            //string successReceipt = cmd.Parameters["p_success_receipts"].Value?.ToString();
+            //string errorReceipt = cmd.Parameters["p_error_receipts"].Value?.ToString();
+            //return (msg,sessionId,successReceipt,errorReceipt);
+            return (msg,sessionId);
         }
 
+      
         public async Task<string> Reject(RejectRequest request)
         {
             using (OracleConnection con = new OracleConnection(_configuration.GetConnectionString("DefaultConnection")))

@@ -12,9 +12,10 @@ namespace CallAuditPortal1.Controllers
     {
         private readonly IAuditEvaluationProcessDAL _services;
         private readonly IFileUploadBAL _fileUpload;
-        public EvaluationProcessController(IAuditEvaluationProcessDAL service)
+        public EvaluationProcessController(IAuditEvaluationProcessDAL service, IFileUploadBAL fileUploadBal)
         {
             _services = service;
+            _fileUpload = fileUploadBal;
         }
         [HttpGet("Get_Evaluation_Process_Data")]
         public async Task<IActionResult> Get_Evaluation_Process_Data(string receiptNo, int audit_typeId)
@@ -49,6 +50,25 @@ namespace CallAuditPortal1.Controllers
             {
                 await _fileUpload.DeleteFile(request.AttachementUrl);
                 return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPost("SaveFeedbackStatus")]
+        public async Task<IActionResult> SaveFeedbackStatus(SaveFeedbackRequest request)
+        {
+            try
+            {
+                var data = await _services.SaveFeedbackStatus(request);
+
+                return Ok(new
+                {
+                    status = "Success",
+                    response = data
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex);
             }
         }
     }
