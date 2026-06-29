@@ -6,11 +6,10 @@ using CallAuditPortal1.Service.BAL.Schedular;
 using CallAuditPortal1.Service.DAL;
 using CallAuditPortal1.Service.Helper;
 using CallAuditPortal1.Service.Interface;
-using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using Oracle.ManagedDataAccess.Client;
 using Quartz;
-using System.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<SmtpSettings>(
@@ -38,30 +37,26 @@ builder.Services.AddScoped<IReportDAL, ReportDAL>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddSingleton<RazorViewRenderer>();
 
-
-//builder.Services.AddDbContext<DbContext>(options =>
-//{
-//    options.UseOracle(builder.Configuration.GetConnectionString("OracleConnection"));
-//});
-
 builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 100 * 1024 * 1024; //100 MB
+});
+
+builder.Services.AddQuartz(q =>
 {
     var sendMailJobKey = new JobKey("SendMailSchedular");
 
     q.AddJob<SendMailSchedular>(opts => opts.WithIdentity(sendMailJobKey));
+
     q.AddTrigger(opts => opts
         .ForJob(sendMailJobKey)
         .WithIdentity("SendMailRecordsTrigger")
         .WithCronSchedule("0/15 * * * * ?"));
 });
 
-
-
-
-
 builder.Services.AddQuartzHostedService(options =>
 {
-    options.Limits.MaxRequestBodySize = 100 * 1024 * 1024; // 100 MB
+    options.WaitForJobsToComplete = true;
 });
 // Add Swagger services
 builder.Services.AddEndpointsApiExplorer();
@@ -91,12 +86,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();      // Generates swagger.json
     app.UseSwaggerUI();    // Swagger UI
 }
+
 app.UseCors("AllowAll");
-
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
-
 app.Run();

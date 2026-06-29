@@ -12,10 +12,10 @@ namespace CallAuditPortal1.Controllers
     {
         private readonly IAuditEvaluationProcessDAL _services;
         private readonly IFileUploadBAL _fileUpload;
-        public EvaluationProcessController(IAuditEvaluationProcessDAL service)
+        public EvaluationProcessController(IAuditEvaluationProcessDAL service, IFileUploadBAL fileUploadBal)
         {
             _services = service;
-            _configuration = configuration;
+            _fileUpload = fileUploadBal;
         }
         [HttpGet("Get_Evaluation_Process_Data")]
         public async Task<IActionResult> Get_Evaluation_Process_Data(string receiptNo, int audit_typeId)
@@ -54,35 +54,21 @@ namespace CallAuditPortal1.Controllers
         }
 
         [HttpPost("SaveFeedbackStatus")]
-        public async Task<string> SaveFeedbackStatus(SaveFeedbackRequest request)
+        public async Task<IActionResult> SaveFeedbackStatus(SaveFeedbackRequest request)
         {
             try
             {
-                using (OracleConnection con = new OracleConnection(_configuration.GetConnectionString("DefaultConnection")))
+                var data = await _services.SaveFeedbackStatus(request);
+
+                return Ok(new
                 {
-                    await con.OpenAsync();
-
-                    using (OracleCommand cmd = new OracleCommand("CSNET_PLUS_REPORT_PKG.save_feedback", con))
-                    {
-                        cmd.CommandType = CommandType.StoredProcedure;
-                        cmd.Parameters.Add("p_gsfs_receipt_no", OracleDbType.Varchar2).Value = request.GSFS_ReceiptNo;
-                        cmd.Parameters.Add("p_audit_type_id", OracleDbType.Varchar2).Value = request.AuditTypeId;
-                        cmd.Parameters.Add("p_attachement_name", OracleDbType.Varchar2).Value = request.GSFS_ReceiptNo;
-                        cmd.Parameters.Add("p_status", OracleDbType.Varchar2).Value = request.Status;
-                        cmd.Parameters.Add("p_remarks", OracleDbType.Varchar2).Value = request.Remark;
-                        cmd.Parameters.Add("p_f_by", OracleDbType.Varchar2).Value = request.ActionBy;
-
-                        cmd.Parameters.Add("p_msg", OracleDbType.Varchar2, 4000).Direction = ParameterDirection.Output;
-
-                        await cmd.ExecuteNonQueryAsync();
-
-                        return cmd.Parameters["p_msg"].Value.ToString();
-                    }
-                }
+                    status = "Success",
+                    response = data
+                });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                return StatusCode(500, ex);
             }
         }
     }
