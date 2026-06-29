@@ -8,7 +8,6 @@ namespace CallAuditPortal1.Service.Interface
     {
         //Task<string> SubmitToBranch(SubmitBranchRequest request);
         Task<string> SubmitToBranch(SubmitBranchRequest request);
-        Task<bool> SendMailByScreenType(string userId, string process, string sessionId, string receiptNos = "");
         Task<string> Reject(RejectRequest request);
         Task<byte[]> Download(DownloadRequest request);
        

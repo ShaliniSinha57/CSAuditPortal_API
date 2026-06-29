@@ -1,19 +1,12 @@
-﻿using CallAuditPortal1.Model;
-using CallAuditPortal1.Model.RequestDTO;
+﻿using CallAuditPortal1.Model.RequestDTO;
 using CallAuditPortal1.Service.Interface;
-using DocumentFormat.OpenXml.Spreadsheet;
 using OfficeOpenXml;
 using Oracle.ManagedDataAccess.Client;
 using Oracle.ManagedDataAccess.Types;
 using System.Data;
-using System.Net;
-using System.Net.Mail;
 using System.Text.Json;
-using static Microsoft.AspNetCore.Razor.Language.TagHelperMetadata;
 using OracleCommand = Oracle.ManagedDataAccess.Client.OracleCommand;
 using OracleConnection = Oracle.ManagedDataAccess.Client.OracleConnection;
-using OracleDataAdapter = Oracle.ManagedDataAccess.Client.OracleDataAdapter;
-using OracleParameter = Oracle.ManagedDataAccess.Client.OracleParameter;
 
 
 
@@ -28,7 +21,7 @@ namespace CallAuditPortal1.Service.DAL
             _configuration = configuration;
             _emailService = emailService;
         }
-        public async Task<string> SubmitToBranch(SubmitBranchRequest request)
+        public async Task<(string msg, string sessionId, string successReceipt, string errorReceipt)> SubmitToBranch(SubmitBranchRequest request)
         {
             using OracleConnection con = new OracleConnection(
                 _configuration.GetConnectionString("DefaultConnection"));
@@ -42,99 +35,23 @@ namespace CallAuditPortal1.Service.DAL
 
             string receiptNos = string.Join(",", request.GSFS_Receipt_Nos);
 
-            cmd.Parameters.Add("p_audit_type_id",
-                OracleDbType.Int32).Value = request.AuditTypeId;
-
-            cmd.Parameters.Add("p_gsfs_receipt_nos",
-                OracleDbType.Varchar2).Value = receiptNos;
-
-            cmd.Parameters.Add("p_action",
-                OracleDbType.Varchar2).Value = "SUBMIT_TO_BRANCH";
-
-            cmd.Parameters.Add("p_msg",
-                OracleDbType.Varchar2,
-                500).Direction = ParameterDirection.Output;
-
-            await cmd.ExecuteNonQueryAsync();
-
-            return cmd.Parameters["p_msg"].Value?.ToString() ?? "";
-        }
-
-        public async Task<string> GenerateMailData(
-            string userId,
-            string process,
-            string sessionId,
-            string receiptNos)
-        {
-            using OracleConnection con = new OracleConnection(
-                _configuration.GetConnectionString("DefaultConnection"));
-
-            await con.OpenAsync();
-
-            using OracleCommand cmd =
-                new OracleCommand("CSNET_PLUS_MAIL_PKG.generate_mail_data", con);
-
-            cmd.CommandType = CommandType.StoredProcedure;
-
-            cmd.Parameters.Add("p_user_id",
-                OracleDbType.Varchar2).Value = userId;
-
-            cmd.Parameters.Add("p_process",
-                OracleDbType.Varchar2).Value = process;
-
-            cmd.Parameters.Add("p_session_id",
-                OracleDbType.Varchar2).Value = sessionId;
-
-            cmd.Parameters.Add("p_gsfs_receipt_nos",
-                OracleDbType.Varchar2).Value = receiptNos;
-
-            cmd.Parameters.Add("p_msg",
-                OracleDbType.Varchar2,
-                4000).Direction = ParameterDirection.Output;
-
-            await cmd.ExecuteNonQueryAsync();
-
-            return cmd.Parameters["p_msg"].Value?.ToString() ?? "";
-        }
-        public string SubmitToBranchSendEmail(
-            string userId,
-            string process,
-            string sessionId,
-            string receiptNos,
-            out string fromEmail,
-            out string toEmail,
-            out string ccEmail,
-            out string subject,
-            out string header,
-            out string footer,
-            out string attachmentFile)
-        {
-            fromEmail = "";
-            toEmail = "";
-            ccEmail = "";
-            subject = "";
-            header = "";
-            footer = "";
-            attachmentFile = "";
-
-            using OracleConnection con = new OracleConnection(
-                _configuration.GetConnectionString("DefaultConnection"));
-
-            con.Open();
-
-            using OracleCommand cmd =
-                new OracleCommand("CSNET_PLUS_MAIL_PKG.generate_mail_data", con);
-
-            cmd.CommandType = CommandType.StoredProcedure;
-            cmd.Parameters.Add("p_user_id", OracleDbType.Varchar2).Value = userId;
-            cmd.Parameters.Add("p_process", OracleDbType.Varchar2).Value = process;
-            cmd.Parameters.Add("p_session_id", OracleDbType.Varchar2).Value = sessionId;
+            cmd.Parameters.Add("p_audit_type_id", OracleDbType.Int32).Value = request.AuditTypeId;
             cmd.Parameters.Add("p_gsfs_receipt_nos", OracleDbType.Varchar2).Value = receiptNos;
-            cmd.Parameters.Add("p_msg", OracleDbType.Varchar2, 4000).Direction = ParameterDirection.Output;
-            cmd.ExecuteNonQuery();
-            string message = cmd.Parameters["p_msg"].Value?.ToString() ?? "";
-            return message;
+            cmd.Parameters.Add("p_user_id", OracleDbType.Varchar2).Value = "testing";
+            cmd.Parameters.Add("p_action",  OracleDbType.Varchar2).Value = "SUBMIT_TO_BRANCH";
+            cmd.Parameters.Add("p_msg", OracleDbType.Varchar2,500).Direction = ParameterDirection.Output;
+            cmd.Parameters.Add("p_session_id", OracleDbType.Varchar2,500).Direction = ParameterDirection.Output;
+            cmd.Parameters.Add("p_success_receipts", OracleDbType.Varchar2,400).Direction = ParameterDirection.Output;
+            cmd.Parameters.Add("p_error_receipts", OracleDbType.Varchar2,400).Direction = ParameterDirection.Output;
+
+            await cmd.ExecuteNonQueryAsync();
+            string msg = cmd.Parameters["p_msg"].Value?.ToString();
+            string sessionId = cmd.Parameters["p_session_id"].Value?.ToString();
+            string successReceipt = cmd.Parameters["p_success_receipts"].Value?.ToString();
+            string errorReceipt = cmd.Parameters["p_error_receipts"].Value?.ToString();
+            return (msg,sessionId,successReceipt,errorReceipt);
         }
+
         public async Task<List<MailResponseModel>> GetMailExcelData(string screenType, string sessionId)
         {
             List<MailResponseModel> mailList = new();

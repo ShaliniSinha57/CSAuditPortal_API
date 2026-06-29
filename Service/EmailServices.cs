@@ -51,5 +51,18 @@ namespace CallAuditPortal1.Service
                 throw ex;
             }
         }
+
+
+        public async Task<string> GetTemplate(string process)
+        {
+            return process switch
+            {
+                "SUBMIT_PROCESS" => "Email_Templates/Successful.cshtml",
+                "HO_ACCEPT" => "Email_Templates/Accepted_HO.cshtml",
+                "HO_REJECT" => "Email_Templates/Rejected_HO.cshtml",
+                "FEEDBACK_ESC_LGC" => "Email_Templates/Feedback.cshtml",
+                _ => throw new Exception("Invalid Process")
+            };
+        }
     }
 }
