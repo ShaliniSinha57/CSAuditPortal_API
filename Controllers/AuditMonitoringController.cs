@@ -35,20 +35,33 @@ namespace CallAuditPortal1.Controllers
            
         }
 
-
-
         [HttpPost("SubmitToBranch")]
         public async Task<IActionResult> SubmitToBranch([FromBody] SubmitBranchRequest request)
+
         {
             try
             {
-                var result = await _auditMonitoringService.SubmitToBranch(request);
-                var sendMailToBranch = await _auditMonitoringService.SendMailForSucessful("123", "Admin"); /*result.userid, result.role*/
+                //string userId = "123";
+                string userId = User.FindFirst("userid")?.Value;
+
+                string sessionId = Guid.NewGuid().ToString();
+
+                var result =
+                    await _auditMonitoringService.SubmitToBranch(request);
+
+                if (result.Contains("SUCCESS"))
+                {
+                    await _auditMonitoringService.SendMailByScreenType(
+                        userId,
+                        "SUBMIT_PROCESS",
+                        sessionId,
+                        string.Join(",", request.GSFS_Receipt_Nos));
+                }
+
                 return Ok(new
                 {
                     success = true,
-                    message = result, 
-                    ismailSent = sendMailToBranch
+                    message = result
                 });
             }
             catch (Exception ex)
@@ -56,6 +69,25 @@ namespace CallAuditPortal1.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
+        //[HttpPost("SubmitToBranch")]
+        //public async Task<IActionResult> SubmitToBranch([FromBody] SubmitBranchRequest request)
+        //{
+        //    try
+        //    {
+        //        var result = await _auditMonitoringService.SubmitToBranch(request);
+        //        var sendMailToBranch = await _auditMonitoringService.SendMailForSucessful("123", "Admin"); /*result.userid, result.role*/
+        //        return Ok(new
+        //        {
+        //            success = true,
+        //            message = result, 
+        //            ismailSent = sendMailToBranch
+        //        });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, ex.Message);
+        //    }
+        //}
 
         //[HttpPost("SendMail")]
         //   public async Task<IActionResult> SendMail(string receiptNo)
