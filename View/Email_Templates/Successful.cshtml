@@ -1,4 +1,4 @@
-﻿@model CallAuditPortal1.Model.RequestDTO.Email
+﻿ @model CallAuditPortal1.Model.RequestDTO.Email
 
 <!DOCTYPE html>
 <html>
@@ -7,17 +7,17 @@
     <title>Successful Mail</title>
 </head>
 <body>
-    <p> Dear Service Partner <span style="color: red;"> ({{ShipToCode}}) </span>, </p>
+    <p> Dear Service Partner <span style="color: red;"> (@Model.ShipToCode) </span>, </p>
 
     <br />
-    Enclose find the Data Audit Result for the {{Audit Month}} Month uploaded in next CS-Net System.You are requested to check 
+    Enclose find the Data Audit Result for the @Model.AuditMonth Month uploaded in next CS-Net System.You are requested to check 
     and provide your feedback to the uploaded cases accordingly within the due date.
     <br/>
     You will be provided Overall 20 days and max 3 chances to respond for cases as visible in system.Also you are requested to accept 
     the Fake/wrong cases in system. so that in future corrective action can be taken by you post Self-introspection.
     <br/>
     Last Date to revert on New Upload Claims:
-    <span style="color: red; font-weight: bold;"> {{LastDate}} </span>
+    <span style="color: red; font-weight: bold;"> @Model.LastDate </span>
     <br/>
     <p style="font-size:18px; font-weight:bold;"> Summary: </p>
     <br>
@@ -43,107 +43,22 @@
             </tr>
         </thead>
         <tbody> 
-            {{TableRows}}
-         </tbody>
+            @if(Model.Rows != null && Model.Rows.Count > 0)
+                {
+                    foreach(var item in Model.Rows)
+                    {
+                        <tr>
+                            <td>@item.AuditHead</td>
+                            <td style="text-align:center;">@item.NewUpload</td>
+                            <td style="text-align:center;">@item.PreviousPending</td>
+                            <td style="text-align:center;">@item.Total</td>
+                        </tr>
+                    }
+                }
+            </tbody>
     </table>
 </body>
 </html>
 
 
 
-@* <body>
-
-    <p>
-        Dear Service Partner
-        <span style="color:red;">
-            (@Model.ShipToCode)
-        </span>,
-    </p>
-
-    <br />
-
-    <p>
-        Enclose find the Data Audit Result for the
-        <span style="color:red;font-weight:bold;">
-            @Model.AuditMonth
-        </span>
-        month uploaded in the CS-Net System. You are requested to check and provide your feedback to the uploaded cases accordingly within the due date.
-    </p>
-
-    <br />
-
-    <p>
-        You will be provided overall 20 days and a maximum of 3 chances to respond for cases as visible in the system. Also, you are requested to accept the fake/wrong cases so that corrective action can be taken.
-    </p>
-
-    <br />
-
-    <p>
-        Last Date to revert on New Upload Claims:
-        <span style="color:red;font-weight:bold;">
-            @Model.LastDate
-        </span>
-    </p>
-
-    <p style="font-size:18px;font-weight:bold;">
-        Summary
-    </p>
-
-    <table style="border-collapse:collapse;width:70%;border:1px solid black;">
-
-        <thead>
-
-            <tr>
-
-                <th style="border:1px solid black;padding:8px;">
-                    Audit Head
-                </th>
-
-                <th style="border:1px solid black;padding:8px;">
-                    New Upload
-                </th>
-
-                <th style="border:1px solid black;padding:8px;">
-                    Previous Pending
-                </th>
-
-                <th style="border:1px solid black;padding:8px;">
-                    Total
-                </th>
-
-            </tr>
-
-        </thead>
-
-        <tbody>
-
-            @foreach (var item in Model.Rows)
-            {
-                <tr>
-
-                    <td style="border:1px solid black;padding:8px;">
-                        @item.AuditHead
-                    </td>
-
-                    <td style="border:1px solid black;padding:8px;text-align:center;">
-                        @item.NewUpload
-                    </td>
-
-                    <td style="border:1px solid black;padding:8px;text-align:center;">
-                        @item.PreviousPending
-                    </td>
-
-                    <td style="border:1px solid black;padding:8px;text-align:center;">
-                        @item.Total
-                    </td>
-
-                </tr>
-            }
-
-        </tbody>
-
-    </table>
-
-</body>
-
- *@

@@ -1,6 +1,7 @@
 ﻿using System.Configuration;
 using System.Data;
 using System.Text.Json;
+using CallAuditPortal1.Model;
 using CallAuditPortal1.Model.RequestDTO;
 using CallAuditPortal1.Service.Interface;
 using Oracle.ManagedDataAccess.Client;
@@ -29,7 +30,7 @@ namespace CallAuditPortal1.Service.DAL
             cmd.Parameters.Add("p_mail_data", OracleDbType.RefCursor).Direction = ParameterDirection.Output;
             cmd.Parameters.Add("p_msg", OracleDbType.Varchar2, 4000).Direction = ParameterDirection.Output;
             await cmd.ExecuteNonQueryAsync();
-            string message = cmd.Parameters["p_msg"].Value?.ToString() ?? "";
+            string message = DBHelper.GetString(cmd.Parameters, "p_msg");
             if (!string.IsNullOrWhiteSpace(message) &&
                 !message.Equals("SUCCESS", StringComparison.OrdinalIgnoreCase))
             {
@@ -56,45 +57,56 @@ namespace CallAuditPortal1.Service.DAL
         }
         private List<MailDynamicRow> ConvertJsonToRows(string json)
         {
-            List<MailDynamicRow> rows = new();
-            if (string.IsNullOrWhiteSpace(json))
-                return rows;
-            using JsonDocument document = JsonDocument.Parse(json);
-            foreach (JsonElement item in document.RootElement.EnumerateArray())
+            try
             {
-                MailDynamicRow row = new MailDynamicRow();
-                row.AuditHead = item.GetProperty("audit_head").GetString() ?? "";
-                row.NewUpload = item.TryGetProperty("new_upload", out var newUpload) ? newUpload.GetInt32() : 0;
-                row.PreviousPending =
-                    item.TryGetProperty("pending", out var pending)
-                        ? pending.GetInt32()
-                        : 0;
+                List<MailDynamicRow> rows = new();
+                if (string.IsNullOrWhiteSpace(json))
+                    return rows;
+                using JsonDocument document = JsonDocument.Parse(json);
+                foreach (JsonElement item in document.RootElement.EnumerateArray())
+                {
+                    MailDynamicRow row = new MailDynamicRow();
+                    row.AuditHead = item.GetProperty("audit_head").GetString() ?? "";
+                    row.NewUpload = GetIntOrDefault(item, "new_upload");
+                    row.PreviousPending = GetIntOrDefault(item, "pending");
 
-                row.AcceptedCount =
-                    item.TryGetProperty("accepted", out var accepted)
-                        ? accepted.GetInt32()
-                        : 0;
+                    row.AcceptedCount = GetIntOrDefault(item, "accepted");
 
-                row.RejectedCount =
-                    item.TryGetProperty("rejected", out var rejected)
-                        ? rejected.GetInt32()
-                        : 0;
+                    row.RejectedCount = GetIntOrDefault(item, "rejected");
+                    row.FeedbackSubmitCount = GetIntOrDefault(item, "feedback");
 
-                row.FeedbackSubmitCount =
-                    item.TryGetProperty("feedback", out var feedback)
-                        ? feedback.GetInt32()
-                        : 0;
-
-                row.Total =
-                    row.NewUpload +
-                    row.PreviousPending +
-                    row.AcceptedCount +
-                    row.RejectedCount +
-                    row.FeedbackSubmitCount;
-                rows.Add(row);
+                    row.Total =
+                        row.NewUpload +
+                        row.PreviousPending +
+                        row.AcceptedCount +
+                        row.RejectedCount +
+                        row.FeedbackSubmitCount;
+                    rows.Add(row);
+                }
+                return rows;
             }
-            return rows;
+            catch(Exception ex)
+            {
+                throw ex;
+            }
         }
 
+        private static int GetIntOrDefault(JsonElement item, string propertyName)
+        {
+            if (!item.TryGetProperty(propertyName, out var value))
+                return 0;
+
+            if (value.ValueKind == JsonValueKind.Null)
+                return 0;
+
+            if (value.ValueKind == JsonValueKind.Number)
+                return value.GetInt32();
+
+            if (value.ValueKind == JsonValueKind.String &&
+                int.TryParse(value.GetString(), out var result))
+                return result;
+
+            return 0;
+        }
     }
 }

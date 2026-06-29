@@ -1,4 +1,5 @@
-﻿using CallAuditPortal1.Model.RequestDTO;
+﻿using CallAuditPortal1.Model;
+using CallAuditPortal1.Model.RequestDTO;
 using CallAuditPortal1.Service.Interface;
 using OfficeOpenXml;
 using Oracle.ManagedDataAccess.Client;
@@ -37,16 +38,16 @@ namespace CallAuditPortal1.Service.DAL
 
             cmd.Parameters.Add("p_audit_type_id", OracleDbType.Int32).Value = request.AuditTypeId;
             cmd.Parameters.Add("p_gsfs_receipt_nos", OracleDbType.Varchar2).Value = receiptNos;
-            cmd.Parameters.Add("p_user_id", OracleDbType.Varchar2).Value = "testing";
             cmd.Parameters.Add("p_action",  OracleDbType.Varchar2).Value = "SUBMIT_PROCESS";
+            cmd.Parameters.Add("p_user_id", OracleDbType.Varchar2).Value = "testing";
             cmd.Parameters.Add("p_msg", OracleDbType.Varchar2,500).Direction = ParameterDirection.Output;
             cmd.Parameters.Add("p_session_id", OracleDbType.Varchar2,500).Direction = ParameterDirection.Output;
             //cmd.Parameters.Add("p_success_receipts", OracleDbType.Varchar2,400).Direction = ParameterDirection.Output;
             //cmd.Parameters.Add("p_error_receipts", OracleDbType.Varchar2,400).Direction = ParameterDirection.Output;
 
             await cmd.ExecuteNonQueryAsync();
-            string msg = cmd.Parameters["p_msg"].Value?.ToString();
-            string sessionId = cmd.Parameters["p_session_id"].Value?.ToString();
+            string msg = DBHelper.GetString(cmd.Parameters, "p_msg");
+            string sessionId = DBHelper.GetString(cmd.Parameters, "p_session_id");
             //string successReceipt = cmd.Parameters["p_success_receipts"].Value?.ToString();
             //string errorReceipt = cmd.Parameters["p_error_receipts"].Value?.ToString();
             //return (msg,sessionId,successReceipt,errorReceipt);

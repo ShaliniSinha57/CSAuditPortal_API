@@ -24,16 +24,22 @@ namespace CallAuditPortal1.Service
                 using var smtp = new SmtpClient(_smtpSettings.Host)
                 {
                     Port = _smtpSettings.Port > 0 ? _smtpSettings.Port : 25,
-                    Credentials = new NetworkCredential(_smtpSettings.UserName, _smtpSettings.Password),
+                    Credentials = new NetworkCredential(_smtpSettings.UserName , _smtpSettings.Password),
                     EnableSsl = _smtpSettings.EnableSsl,
                 };
+
+                if (string.IsNullOrWhiteSpace(fromEmail))
+                {
+                    fromEmail = _smtpSettings.FromEmail;
+                }
                 var message = new MailMessage
                 {
-                    From = new MailAddress(string.IsNullOrEmpty(fromEmail) ? _smtpSettings.FromEmail : fromEmail, _smtpSettings.DisplayName),
+                    From = new MailAddress(_smtpSettings.UserName, _smtpSettings.DisplayName),
                     Subject = subject,
                     Body = finalBody,
                     IsBodyHtml = true,
                 };
+
                 if (!string.IsNullOrEmpty(attachementName) && System.IO.File.Exists(attachementName))
                 {
                     string uploadsFolder = System.IO.Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/AttachemeFile/");
@@ -42,8 +48,8 @@ namespace CallAuditPortal1.Service
                     var attachment = new Attachment(attachmentFileName);
                     message.Attachments.Add(attachment);
                 }
-                message.To.Add(toEmail);
-                if (!string.IsNullOrEmpty(ccEmail)) message.CC.Add(ccEmail);
+                message.To.Add(fromEmail);
+                //if (!string.IsNullOrEmpty(ccEmail)) message.CC.Add(ccEmail);
                 await smtp.SendMailAsync(message);
             }
             catch (Exception ex)

@@ -26,46 +26,51 @@ namespace CallAuditPortal1.Service
 
         public async Task<string> SubmitToBranch(SubmitBranchRequest request)
         {
-            var result =  await _auditMonitoringDAL.SubmitToBranch(request);
-            if (!string.IsNullOrWhiteSpace(result.sessionId))
+            try
             {
-                string process = "SUBMIT_PROCESS";
-                var mailList = await _emailDAL.GetMailData(process, result.sessionId);
-
-                foreach (var item in mailList)
+                var result = await _auditMonitoringDAL.SubmitToBranch(request);
+                if (!string.IsNullOrWhiteSpace(result.sessionId))
                 {
-                    var emailModel = new Email
+                    string process = "SUBMIT_PROCESS";
+                    var mailList = await _emailDAL.GetMailData(process, result.sessionId);
+
+                    foreach (var item in mailList)
                     {
-                        To = item.MailTo,
-                        CC = item.MailCc,
-                        MailSubject = item.Subject,
-                        Header = item.Header,
-                        Footer = item.Footer,
-                        ShipToCode = item.ShipToCode,
-                        CompanyName = item.CompanyName,
-                        AuditMonth = item.AuditMonth,
-                        LastDate = item.ValidTill,
-                        Rows = item.Rows
-                    };
+                        var emailModel = new Email
+                        {
+                            To = item.MailTo,
+                            CC = item.MailCc,
+                            MailSubject = item.Subject,
+                            Header = item.Header,
+                            Footer = item.Footer,
+                            ShipToCode = item.ShipToCode,
+                            CompanyName = item.CompanyName,
+                            AuditMonth = item.AuditMonth,
+                            LastDate = item.ValidTill,
+                            Rows = item.Rows
+                        };
 
-                    string template = await _emailService.GetTemplate(process);
+                        string template = await _emailService.GetTemplate(process);
 
-                    string html = await _razorRenderer.RenderAsync(
-                        template,
-                        emailModel);
+                        string html = await _razorRenderer.RenderAsync(
+                            template,
+                            emailModel);
 
-                    await _emailService.SendEmailAsync(
-                        fromEmail: "",
-                        toEmail: emailModel.To,
-                        ccEmail: emailModel.CC,
-                        subject: string.IsNullOrWhiteSpace(item.Subject)
-                                    ? await _emailService.GetTemplate(process)
-                                    : item.Subject,
-                        bodyHtml: html,
-                        attachementName: item.AttachmentFile);
+                        await _emailService.SendEmailAsync(
+                            fromEmail: "",
+                            toEmail: emailModel.To,
+                            ccEmail: emailModel.CC,
+                            subject: "CS Audit",
+                            bodyHtml: html,
+                            attachementName: item.AttachmentFile);
+                    }
                 }
+                return result.msg;
             }
-            return result.msg;
+            catch
+            {
+                throw;
+            }
         }
         
         public async Task<string> Reject(RejectRequest request)
