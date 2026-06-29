@@ -2,7 +2,8 @@
 {
     public class UploadResponse
     {
-        public string Status { get; set; }
+        public bool Status { get; set; }
+        public string SessionId { get; set; }
         public int Inserted { get; set; }
         public int Updated { get; set; }
         public int Error { get; set; }

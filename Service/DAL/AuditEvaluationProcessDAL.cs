@@ -16,11 +16,11 @@ namespace CallAuditPortal1.Service.DAL
             _configuration = configuration;
         }
 
-        public async Task<List<dynamic>> Get_Evaluation_Data(string receipt_no, int audit_typeId)
+        public async Task<dynamic> Get_Evaluation_Data(string receipt_no, int audit_typeId)
         {
             try
             {
-                List<dynamic> data = new List<dynamic>();
+               dynamic data = null;
 
                 using (OracleConnection con = new OracleConnection(_configuration.GetConnectionString("DefaultConnection")))
                 {
@@ -65,7 +65,7 @@ namespace CallAuditPortal1.Service.DAL
                                     );
                                 }
 
-                                data.Add(row);
+                                data = row;
                             }
                         }
 
@@ -81,7 +81,6 @@ namespace CallAuditPortal1.Service.DAL
             }
         }
 
-
         public async Task<string> SaveFeedbackStatus(SaveFeedbackRequest request)
         {
             try
@@ -89,21 +88,17 @@ namespace CallAuditPortal1.Service.DAL
                 using(OracleConnection con = new OracleConnection(_configuration.GetConnectionString("DefaultConnection")))
                 {
                     await con.OpenAsync();
-
                     using(OracleCommand cmd = new OracleCommand("CSNET_PLUS_REPORT_PKG.save_feedback", con))
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
                         cmd.Parameters.Add("p_gsfs_receipt_no", OracleDbType.Varchar2).Value = request.GSFS_ReceiptNo;
                         cmd.Parameters.Add("p_audit_type_id", OracleDbType.Varchar2).Value = request.AuditTypeId;
-                        cmd.Parameters.Add("p_attachement_name", OracleDbType.Varchar2).Value = request.GSFS_ReceiptNo;
+                        cmd.Parameters.Add("p_attachement_name", OracleDbType.Varchar2).Value = request.AttachementUrl;
                         cmd.Parameters.Add("p_status", OracleDbType.Varchar2).Value = request.Status;
                         cmd.Parameters.Add("p_remarks", OracleDbType.Varchar2).Value = request.Remark;
                         cmd.Parameters.Add("p_f_by", OracleDbType.Varchar2).Value = request.ActionBy;
-
                         cmd.Parameters.Add("p_msg", OracleDbType.Varchar2, 4000).Direction = ParameterDirection.Output;
-
                         await cmd.ExecuteNonQueryAsync();
-
                         return cmd.Parameters["p_msg"].Value.ToString();
                     }
                 }
@@ -113,6 +108,5 @@ namespace CallAuditPortal1.Service.DAL
                 throw;
             }
         }
-
     }
 }

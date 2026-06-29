@@ -6,11 +6,10 @@ using CallAuditPortal1.Service.BAL.Schedular;
 using CallAuditPortal1.Service.DAL;
 using CallAuditPortal1.Service.Helper;
 using CallAuditPortal1.Service.Interface;
-using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using Oracle.ManagedDataAccess.Client;
 using Quartz;
-using System.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<SmtpSettings>(
@@ -39,7 +38,6 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddSingleton<RazorViewRenderer>();
 
 
-
 builder.Services.AddQuartz(q =>
 {
     var jobKey = new JobKey("SendMailSchedular");
@@ -54,6 +52,13 @@ builder.Services.AddQuartz(q =>
         // Every day at 7 PM
         .WithCronSchedule("0 0 19 * * ?"));
 });
+
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 100 * 1024 * 1024; //100 MB
+});
+
+
 
 builder.Services.AddQuartzHostedService(options =>
 {
@@ -89,12 +94,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();      // Generates swagger.json
     app.UseSwaggerUI();    // Swagger UI
 }
+
 app.UseCors("AllowAll");
-
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
-
 app.Run();

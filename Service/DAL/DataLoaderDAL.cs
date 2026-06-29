@@ -1,8 +1,10 @@
-﻿using CallAuditPortal1.Model.RequestDTO;
+﻿using CallAuditPortal1.Model;
+using CallAuditPortal1.Model.RequestDTO;
 using CallAuditPortal1.Model.ResponseDTO;
 using CallAuditPortal1.Service.Interface;
 using Oracle.ManagedDataAccess.Client;
 using Oracle.ManagedDataAccess.Types;
+using System.CodeDom;
 using System.Configuration;
 using System.Data;
 using System.Dynamic;
@@ -17,70 +19,167 @@ namespace CallAuditPortal1.Service.DAL
             _configuration = configuration;
         }
 
-        public async Task<string> UploadData(string sessionId, string templateId, string auditData, string userName)
+        public async Task<(string message, bool status, int insertCount, int updatecount, int errorCount)> UploadData(string sessionId, string templateId, string userName)
         {
-            string connectionString =
-                _configuration.GetConnectionString("DefaultConnection");
+            string connectionString = _configuration.GetConnectionString("DefaultConnection");
 
             try
             {
-                using (OracleConnection con =
-                    new OracleConnection(connectionString))
+                using (OracleConnection con = new OracleConnection(connectionString))
                 {
-                    using (OracleCommand cmd =
-                        new OracleCommand("csnet_plus_excel_pkg.csnet_plus_excel_upld_proc", con))
+                    await con.OpenAsync();
+                    using (OracleCommand cmd = new OracleCommand("PKG_TEMPLATE_UPLOAD.PROC_PROCESS_UPLOAD", con))
                     {
 
                         cmd.CommandType = CommandType.StoredProcedure;
 
-                        if (string.IsNullOrWhiteSpace(auditData))
-                        {
-                            return "Audit date is required.";
-                        }
+                        cmd.Parameters.Add("P_FILEID", OracleDbType.Varchar2).Value = sessionId;
+                        cmd.Parameters.Add("P_FILETYPEID", OracleDbType.Int32).Value = Convert.ToInt32(templateId);
 
-                        cmd.Parameters.Add("p_session", OracleDbType.Varchar2).Value = sessionId;
-                        cmd.Parameters.Add("p_template_id", OracleDbType.Int32).Value = Convert.ToInt32(templateId);
-                        cmd.Parameters.Add("p_audit_date", OracleDbType.Varchar2).Value = auditData.Trim();
-                        cmd.Parameters.Add("p_user", OracleDbType.Varchar2).Value = userName;
-                        OracleParameter statusParam = new OracleParameter("p_status", OracleDbType.Varchar2, 100);
-                        statusParam.Direction = ParameterDirection.Output;
-                        cmd.Parameters.Add(statusParam);
-                        OracleParameter insertedParam = new OracleParameter("p_inserted", OracleDbType.Int32);
-                        insertedParam.Direction = ParameterDirection.Output;
-                        cmd.Parameters.Add(insertedParam);
-                        OracleParameter updatedParam = new OracleParameter("p_updated", OracleDbType.Int32);
-                        updatedParam.Direction = ParameterDirection.Output;
-                        cmd.Parameters.Add(updatedParam);
-                        OracleParameter errorParam = new OracleParameter("p_errors", OracleDbType.Int32);
-                        errorParam.Direction = ParameterDirection.Output;
-
-                        cmd.Parameters.Add(errorParam);
-                        await con.OpenAsync();
+                        //Output
+                        cmd.Parameters.Add("P_STATUS_FLAG", OracleDbType.Int32).Direction = ParameterDirection.Output;
+                        cmd.Parameters.Add("P_INS_COUNT", OracleDbType.Int32).Direction = ParameterDirection.Output;
+                        cmd.Parameters.Add("P_UPD_COUNT", OracleDbType.Int32).Direction = ParameterDirection.Output;
+                        cmd.Parameters.Add("P_ERR_COUNT", OracleDbType.Int32).Direction = ParameterDirection.Output;
+                        cmd.Parameters.Add("P_STATUS_MSG", OracleDbType.Varchar2, 4000).Direction = ParameterDirection.Output;
+                        
                         await cmd.ExecuteNonQueryAsync();
-                        string status = statusParam.Value?.ToString();
-                        int inserted = Convert.ToInt32(insertedParam.Value.ToString());
-                        int updated = Convert.ToInt32(updatedParam.Value?.ToString());
-                        int errors = Convert.ToInt32(errorParam.Value?.ToString());
-                        var response = new UploadResponse
-                        {
-                            Status = status,
-                            Inserted = inserted,
-                            Updated = updated,
-                            Error = errors,
-                            Message = errors > 0 ? "File Uploaded with error" : "File Uploaded Successfully"
 
-                        };
-                        return
-                            $"Status : {status}\n" +
-                            $"Inserted : {inserted}\n" +
-                            $"Updated : {updated}\n" +
-                            $"Errors : {errors}";
+                        string message = cmd.Parameters["P_STATUS_MSG"].Value.ToString();
+                        int flag = GetOracleInt(cmd.Parameters["P_STATUS_FLAG"]);
+                        int insertCount = GetOracleInt(cmd.Parameters["P_INS_COUNT"]);
+                        int updateCount = GetOracleInt(cmd.Parameters["P_UPD_COUNT"]);
+                        int errorCount = GetOracleInt(cmd.Parameters["P_ERR_COUNT"]);
+
+
+                        return (message, flag == 0, insertCount: insertCount, updateCount, errorCount);
                     }
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                return ex.Message;
+                throw;
+            }
+        }
+
+        private int GetOracleInt(OracleParameter parameter)
+        {
+            object value = parameter?.Value;
+
+            if (value == null || value == DBNull.Value)
+                return 0;
+
+            if (value is OracleDecimal od)
+                return od.IsNull ? 0 : od.ToInt32();
+
+            return Convert.ToInt32(value);
+        }
+
+        public async Task<List<dynamic>> GetErrorData(int templateId, int sessionId)
+        {
+            try
+            {
+                List<dynamic> data = new List<dynamic>();
+                using (OracleConnection con = new OracleConnection(_configuration.GetConnectionString("DefaultConnection")))
+                {
+                    await con.OpenAsync();
+
+                    using (OracleCommand cmd = new OracleCommand("PKG_TEMPLATE_UPLOAD.PROC_GET_ERR_DATA", con))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.Add("P_TEMPLATE_ID", OracleDbType.Int32).Value = templateId;
+                        cmd.Parameters.Add("P_SESSION_ID", OracleDbType.Int32).Value = sessionId;
+
+                        //Output
+                        cmd.Parameters.Add("P_ERR_DATA", OracleDbType.RefCursor).Direction = ParameterDirection.Output;
+                        cmd.Parameters.Add("P_STATUS_FLAG", OracleDbType.Int32).Direction = ParameterDirection.Output;
+                        cmd.Parameters.Add("P_STATUS_MSG", OracleDbType.Varchar2, 4000).Direction = ParameterDirection.Output;
+
+                        await cmd.ExecuteNonQueryAsync();
+
+                        string message = cmd.Parameters["P_STATUS_MSG"].Value.ToString();
+                        int flag = GetOracleInt(cmd.Parameters["P_STATUS_FLAG"]);
+
+                        if(flag == 0)
+                        {
+                            OracleRefCursor refCurs = (OracleRefCursor)cmd.Parameters["P_ERR_DATA"].Value;
+                            using (OracleDataReader reader = refCurs.GetDataReader())
+                            {
+                                if (reader.HasRows)
+                                {
+                                    while (await reader.ReadAsync())
+                                    {
+                                        var row = new ExpandoObject() as IDictionary<string, object>;
+
+                                        for (int i = 0; i < reader.FieldCount; i++)
+                                        {
+                                            row.Add(
+                                                reader.GetName(i),
+                                                reader.IsDBNull(i)
+                                                    ? null
+                                                    : reader.GetValue(i)
+                                            );
+                                        }
+                                        data.Add(row);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    return data;
+                }
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+        public async Task<List<Template_Columns>> FetchTemplateColumnsAsync(int templateId)
+        {
+            try
+            {
+                List<Template_Columns> columns = new List<Template_Columns>();
+                using(OracleConnection con = new OracleConnection(_configuration.GetConnectionString("DefaultConnection")))
+                {
+                    await con.OpenAsync();
+                    using(OracleCommand cmd = new OracleCommand("PKG_TEMPLATE_UPLOAD.PROC_EXCEL_TEMPLATE_INFO", con))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.Add("P_TEMPLATE_ID", OracleDbType.Int32).Value = templateId;
+
+                        // Output Parameters
+
+                        cmd.Parameters.Add("P_EXC_TEMP", OracleDbType.RefCursor).Direction = ParameterDirection.Output;
+                        cmd.Parameters.Add("P_STATUS_FLAG", OracleDbType.Int32).Direction = ParameterDirection.Output;
+                        cmd.Parameters.Add("P_STATUS_MSG", OracleDbType.Varchar2, 4000).Direction = ParameterDirection.Output;
+
+                        await cmd.ExecuteNonQueryAsync();
+
+                        OracleRefCursor refCurs = (OracleRefCursor)cmd.Parameters["P_EXC_TEMP"].Value;
+                        using (OracleDataReader reader = refCurs.GetDataReader())
+                        {
+                            if (reader.HasRows)
+                            {
+                                while (await reader.ReadAsync())
+                                {
+                                    columns.Add(new Template_Columns
+                                    {
+                                        EXCEL_COLUMN_NO = reader["EXCEL_COLUMN_NO"] != DBNull.Value ? Convert.ToInt32(reader["EXCEL_COLUMN_NO"]) : 0,
+                                        EXCEL_COLUMN_NAME = reader["EXCEL_COLUMN_NAME"].ToString(),
+                                        DB_COLUMN = reader["DB_COLUMN"].ToString(),
+                                        STG_TABLE = reader["STG_TABLE"].ToString()
+                                    });
+                                }
+                            }
+                        }
+                        return columns;
+                    }
+                }
+            }
+            catch
+            {
+                throw;
             }
         }
 
@@ -144,7 +243,6 @@ namespace CallAuditPortal1.Service.DAL
                         {
                             while (await reader.ReadAsync())
                             {
-                                Console.WriteLine("Row Found");
                                 var row = new ExpandoObject() as IDictionary<string, object>;
 
                                 for (int i = 0; i < reader.FieldCount; i++)
