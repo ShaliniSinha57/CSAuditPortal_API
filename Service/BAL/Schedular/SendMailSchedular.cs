@@ -26,9 +26,9 @@ namespace CallAuditPortal1.Service.BAL.Schedular
         {
             string sessionId = Guid.NewGuid().ToString();
 
-            await _auditMonitoringService.SendMailByScreenType("SYSTEM", "HO_ACCEPT", sessionId);
-            await _auditMonitoringService.SendMailByScreenType("SYSTEM", "HO_REJECT", sessionId);
-            await _auditMonitoringService.SendMailByScreenType("SYSTEM", "FEEDBACK_ESC_LGC", sessionId);
+            //await _auditMonitoringService.SendMailByScreenType("SYSTEM", "HO_ACCEPT", sessionId);
+            //await _auditMonitoringService.SendMailByScreenType("SYSTEM", "HO_REJECT", sessionId);
+            //await _auditMonitoringService.SendMailByScreenType("SYSTEM", "FEEDBACK_ESC_LGC", sessionId);
 
         }
     }

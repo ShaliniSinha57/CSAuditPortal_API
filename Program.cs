@@ -35,6 +35,7 @@ builder.Services.AddScoped<IReviewProcessDAL, ReviewProcessDAL>();
 builder.Services.AddScoped<IAuditEvaluationProcessDAL, AuditEvaluationProcessDAL>();
 builder.Services.AddScoped<IReportDAL, ReportDAL>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IMailProcessDAL, MailProcessDAL>();
 builder.Services.AddSingleton<RazorViewRenderer>();
 
 

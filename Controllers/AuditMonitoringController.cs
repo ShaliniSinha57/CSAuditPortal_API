@@ -41,22 +41,10 @@ namespace CallAuditPortal1.Controllers
         {
             try
             {
-                //string userId = "123";
-                string userId = User.FindFirst("userid")?.Value;
-
-                string sessionId = Guid.NewGuid().ToString();
-
                 var result =
                     await _auditMonitoringService.SubmitToBranch(request);
 
-                if (result.Contains("SUCCESS"))
-                {
-                    await _auditMonitoringService.SendMailByScreenType(
-                        userId,
-                        "SUBMIT_PROCESS",
-                        sessionId,
-                        string.Join(",", request.GSFS_Receipt_Nos));
-                }
+                
 
                 return Ok(new
                 {

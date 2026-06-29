@@ -13,13 +13,15 @@ namespace CallAuditPortal1.Service
     {
         private readonly IAuditMonitoringDAL _auditMonitoringDAL;
         private readonly IEmailService _emailService;
+        private readonly IMailProcessDAL _emailDAL;
         private readonly RazorViewRenderer _razorRenderer;
 
-        public AuditMonitoringService(IAuditMonitoringDAL auditMonitoringDAL, IEmailService emailService, RazorViewRenderer razorRenderer)
+        public AuditMonitoringService(IAuditMonitoringDAL auditMonitoringDAL, IEmailService emailService, RazorViewRenderer razorRenderer, IMailProcessDAL mailDAL)
         {
             _auditMonitoringDAL = auditMonitoringDAL;
             _emailService = emailService;
             _razorRenderer = razorRenderer;
+            _emailDAL = mailDAL;
         }
 
         public async Task<string> SubmitToBranch(SubmitBranchRequest request)
@@ -28,7 +30,7 @@ namespace CallAuditPortal1.Service
             if (!string.IsNullOrWhiteSpace(result.sessionId))
             {
                 string process = "SUBMIT_PROCESS";
-                var mailList = await _auditMonitoringDAL.GetMailExcelData(process, result.sessionId);
+                var mailList = await _emailDAL.GetMailData(process, result.sessionId);
 
                 foreach (var item in mailList)
                 {
