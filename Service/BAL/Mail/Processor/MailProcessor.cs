@@ -4,23 +4,16 @@ namespace CallAuditPortal1.Service.BAL.Mail.Processor
 {
     public class MailProcessor : IMailProcessor
     {
-        private readonly AcceptedHOWorker _acceptedWorker;
-        private readonly RejectedHOWorker _rejectedHOWorker;
-        private readonly FeedbackSubmitWorker _feedbackSubmitWorker;
+        private readonly IEnumerable<IMailWorker> _worker;
 
-        public MailProcessor(AcceptedHOWorker acceptedWorker, RejectedHOWorker rejectedHOWorker, FeedbackSubmitWorker feedbackSubmitWorker)
+        public MailProcessor(IEnumerable<IMailWorker> worker)
         {
-            _acceptedWorker = acceptedWorker;
-            _rejectedHOWorker = rejectedHOWorker;
-            _feedbackSubmitWorker = feedbackSubmitWorker;
+            _worker = worker;
         }
 
         public async Task ProcessAsync()
         {
-            await Task.WhenAll(
-                _acceptedWorker.ProcessAsync(),
-                _rejectedHOWorker.ProcessAsync(),
-                _feedbackSubmitWorker.ProcessAsync());
+            await Task.WhenAll(_worker.Select(x => x.ProcessAsync()));
         }
     }
 }

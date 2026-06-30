@@ -13,7 +13,6 @@ namespace CallAuditPortal1.Service.BAL.Mail.Schedular
             _mailProcessor = mailProcessor;
         }
 
-       
        public async Task Execute(IJobExecutionContext context)
         {
             await _mailProcessor.ProcessAsync();

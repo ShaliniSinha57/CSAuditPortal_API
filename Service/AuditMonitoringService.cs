@@ -14,13 +14,10 @@ namespace CallAuditPortal1.Service
         private readonly IAuditMonitoringDAL _auditMonitoringDAL;
         private readonly IEmailService _emailService;
         private readonly IMailProcessDAL _emailDAL;
-        private readonly RazorViewRenderer _razorRenderer;
-
-        public AuditMonitoringService(IAuditMonitoringDAL auditMonitoringDAL, IEmailService emailService, RazorViewRenderer razorRenderer, IMailProcessDAL mailDAL)
+        public AuditMonitoringService(IAuditMonitoringDAL auditMonitoringDAL, IEmailService emailService, IMailProcessDAL mailDAL)
         {
             _auditMonitoringDAL = auditMonitoringDAL;
             _emailService = emailService;
-            _razorRenderer = razorRenderer;
             _emailDAL = mailDAL;
         }
 
@@ -49,20 +46,7 @@ namespace CallAuditPortal1.Service
                             LastDate = item.ValidTill,
                             Rows = item.Rows
                         };
-
-                        string template = await _emailService.GetTemplate(process);
-
-                        string html = await _razorRenderer.RenderAsync(
-                            template,
-                            emailModel);
-
-                        await _emailService.SendEmailAsync(
-                            fromEmail: "",
-                            toEmail: emailModel.To,
-                            ccEmail: emailModel.CC,
-                            subject: "CS Audit",
-                            bodyHtml: html,
-                            attachementName: item.AttachmentFile);
+                        await _emailService.SendEmailAsync(emailModel, process);
                     }
                 }
                 return result.msg;

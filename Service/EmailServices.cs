@@ -1,26 +1,34 @@
-﻿using CallAuditPortal1.Model.RequestDTO;
-using CallAuditPortal1.Service.Interface;
-using Microsoft.Extensions.Options;
+﻿using System.Diagnostics;
 using System.Net;
 using System.Net.Mail;
+using CallAuditPortal1.Model.RequestDTO;
+using CallAuditPortal1.Service.Helper;
+using CallAuditPortal1.Service.Interface;
+using Microsoft.Extensions.Options;
 
 namespace CallAuditPortal1.Service
 {
     public class EmailService : IEmailService
     {
         private readonly SmtpSettings _smtpSettings;
-        public EmailService(IOptions<SmtpSettings> smtpSettings)
+        private readonly RazorViewRenderer _razorRenderer;
+        public EmailService(IOptions<SmtpSettings> smtpSettings, RazorViewRenderer razorViewRenderer)
         {
             _smtpSettings = smtpSettings.Value;
+            _razorRenderer = razorViewRenderer;
         }
-        public async Task SendEmailAsync(string fromEmail, string toEmail, string ccEmail, string subject, string bodyHtml, string attachementName = null)
+        public async Task SendEmailAsync(Email email, string ProcessCode)
         {
             try
             {
+                string template = await GetTemplate(ProcessCode);
+                string html = await _razorRenderer.RenderAsync(
+                            template,
+                            email);
                 var introMessage = @"<p>Dear User,</p> <p>This is the scheme that has been approved:</p>        ";
                 var footer = @"<p style='font-size:12px; color:#777;'>This is an automated message from LG CS AuditPortal </p>";
                 //var finalBody = introMessage + footer;
-                var finalBody = introMessage + bodyHtml + footer;
+                var finalBody = introMessage + html + footer;
                 using var smtp = new SmtpClient(_smtpSettings.Host)
                 {
                     Port = _smtpSettings.Port > 0 ? _smtpSettings.Port : 25,
@@ -28,28 +36,29 @@ namespace CallAuditPortal1.Service
                     EnableSsl = _smtpSettings.EnableSsl,
                 };
 
-                if (string.IsNullOrWhiteSpace(fromEmail))
-                {
-                    fromEmail = _smtpSettings.FromEmail;
-                }
                 var message = new MailMessage
                 {
                     From = new MailAddress(_smtpSettings.UserName, _smtpSettings.DisplayName),
-                    Subject = subject,
+                    Subject = email.MailSubject,
                     Body = finalBody,
                     IsBodyHtml = true,
                 };
 
-                if (!string.IsNullOrEmpty(attachementName) && System.IO.File.Exists(attachementName))
+                if (!string.IsNullOrWhiteSpace(email.To))
                 {
-                    string uploadsFolder = System.IO.Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/AttachemeFile/");
-                   // var attachmentFileName = uploadsFolder + "" + attachementName;
-                    var attachmentFileName = Path.Combine(uploadsFolder, attachementName);
-                    var attachment = new Attachment(attachmentFileName);
-                    message.Attachments.Add(attachment);
+                    foreach (var item in email.To.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                    {
+                        message.To.Add(new MailAddress(item));
+                    }
                 }
-                message.To.Add(fromEmail);
-                //if (!string.IsNullOrEmpty(ccEmail)) message.CC.Add(ccEmail);
+
+                if (!string.IsNullOrWhiteSpace(email.CC))
+                {
+                    foreach(var item in email.CC.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                    {
+                        message.CC.Add(item);
+                    }
+                }
                 await smtp.SendMailAsync(message);
             }
             catch (Exception ex)
@@ -59,7 +68,7 @@ namespace CallAuditPortal1.Service
         }
 
 
-        public async Task<string> GetTemplate(string process)
+        private async Task<string> GetTemplate(string process)
         {
             return process switch
             {

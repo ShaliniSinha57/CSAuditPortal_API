@@ -40,9 +40,16 @@ builder.Services.AddSingleton<RazorViewRenderer>();
 // Mail Services 
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IMailProcessDAL, MailProcessDAL>();
-builder.Services.AddScoped<IMailWorker, MailWorker>();
+builder.Services.AddScoped<IMailWorker, FeedbackSubmitWorker>();
+builder.Services.AddScoped<IMailWorker, AcceptedHOWorker>();
+builder.Services.AddScoped<IMailWorker, RejectedHOWorker>();
 builder.Services.AddScoped<IMailProcessor, MailProcessor>();
 
+
+// Singleton
+builder.Services.AddSingleton<MailConcurrencyLimiter>();
+
+//Schedular
 builder.Services.AddQuartz(q =>
 {
     var jobKey = new JobKey("SendMailSchedular");
