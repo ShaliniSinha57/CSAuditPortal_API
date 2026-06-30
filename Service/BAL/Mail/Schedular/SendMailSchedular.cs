@@ -2,7 +2,7 @@
 using Quartz;
 using System.Text;
 
-namespace CallAuditPortal1.Service.BAL.Schedular
+namespace CallAuditPortal1.Service.BAL.Mail.Schedular
 {
    
     public class SendMailSchedular : IJob

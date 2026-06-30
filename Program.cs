@@ -2,7 +2,9 @@ using CallAuditPortal1.Model;
 using CallAuditPortal1.Model.RequestDTO;
 using CallAuditPortal1.Service;
 using CallAuditPortal1.Service.BAL;
-using CallAuditPortal1.Service.BAL.Schedular;
+using CallAuditPortal1.Service.BAL.Mail.Processor;
+using CallAuditPortal1.Service.BAL.Mail.Schedular;
+using CallAuditPortal1.Service.BAL.Mail.Worker;
 using CallAuditPortal1.Service.DAL;
 using CallAuditPortal1.Service.Helper;
 using CallAuditPortal1.Service.Interface;
@@ -22,8 +24,6 @@ builder.Services.AddScoped<OracleConnection>(x =>
 // Add services to the container.
 
 builder.Services.AddControllersWithViews();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-//builder.Services.AddOpenApi();
 builder.Services.AddScoped<DatabaseConnection>();
 builder.Services.AddScoped<AuditBAL>();
 builder.Services.AddScoped<AuditDAL>();
@@ -34,10 +34,14 @@ builder.Services.AddScoped<IAuditMonitoringService, AuditMonitoringService>();
 builder.Services.AddScoped<IReviewProcessDAL, ReviewProcessDAL>();
 builder.Services.AddScoped<IAuditEvaluationProcessDAL, AuditEvaluationProcessDAL>();
 builder.Services.AddScoped<IReportDAL, ReportDAL>();
-builder.Services.AddScoped<IEmailService, EmailService>();
-builder.Services.AddScoped<IMailProcessDAL, MailProcessDAL>();
+
 builder.Services.AddSingleton<RazorViewRenderer>();
 
+// Mail Services 
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IMailProcessDAL, MailProcessDAL>();
+builder.Services.AddScoped<IMailWorker, MailWorker>();
+builder.Services.AddScoped<IMailProcessor, MailProcessor>();
 
 builder.Services.AddQuartz(q =>
 {
