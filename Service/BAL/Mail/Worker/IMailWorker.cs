@@ -2,5 +2,6 @@
 {
     public interface IMailWorker
     {
+        Task ProcessAsync();
     }
 }
