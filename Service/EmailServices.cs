@@ -27,7 +27,7 @@ namespace CallAuditPortal1.Service
                             email);
                 var introMessage = @"<p>Dear User,</p> <p>This is the scheme that has been approved:</p>        ";
                 var footer = @"<p style='font-size:12px; color:#777;'>This is an automated message from LG CS AuditPortal </p>";
-                //var finalBody = introMessage + footer;
+               
                 var finalBody = introMessage + html + footer;
                 using var smtp = new SmtpClient(_smtpSettings.Host)
                 {

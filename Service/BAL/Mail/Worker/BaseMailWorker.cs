@@ -12,12 +12,14 @@ namespace CallAuditPortal1.Service.BAL.Mail.Worker
         private readonly IEmailService _mailService;
         private readonly IMailProcessDAL _mailDataLoader;
         private readonly MailConcurrencyLimiter _limiter;
+        private readonly ILogger<BaseMailWorker> _logger;
 
-        public BaseMailWorker(IEmailService mailService, IMailProcessDAL mailDataLoader, MailConcurrencyLimiter limiter)
+        public BaseMailWorker(IEmailService mailService, IMailProcessDAL mailDataLoader, MailConcurrencyLimiter limiter, ILogger<BaseMailWorker> logger)
         {
             _mailService = mailService;
             _mailDataLoader = mailDataLoader;
             _limiter = limiter;
+            _logger = logger;
         }
 
         protected abstract string ProcessCode { get; }
@@ -26,7 +28,11 @@ namespace CallAuditPortal1.Service.BAL.Mail.Worker
         {
             while (true)
             {
-                var mailData = await _mailDataLoader.GetMailData(ProcessCode, null);
+                _logger.LogInformation($"Process started with {ProcessCode}");
+                var mailData = await _mailDataLoader.GetMailData(ProcessCode, null, "PAGINATION");
+
+                _logger.LogInformation("Fetched {Count} mails for {ProcessCode}",mailData.Count,ProcessCode);
+
                 if (mailData == null || !mailData.Any())
                     break;
                 var task = mailData.Select(ProcessSingleMailAsync);
@@ -54,6 +60,7 @@ namespace CallAuditPortal1.Service.BAL.Mail.Worker
                     Rows = mail.Rows
                 };
                 await _mailService.SendEmailAsync(emailModel, ProcessCode);
+                _logger.LogInformation("Mail sent successfully to {Email}",emailModel.To);
             }
             catch(Exception ex)
             {

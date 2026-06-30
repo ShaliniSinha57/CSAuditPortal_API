@@ -29,7 +29,7 @@ namespace CallAuditPortal1.Service
                 if (!string.IsNullOrWhiteSpace(result.sessionId))
                 {
                     string process = "SUBMIT_PROCESS";
-                    var mailList = await _emailDAL.GetMailData(process, result.sessionId);
+                    var mailList = await _emailDAL.GetMailData(process, result.sessionId, "ALL_DATA");
 
                     foreach (var item in mailList)
                     {

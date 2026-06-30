@@ -8,8 +8,9 @@ namespace CallAuditPortal1.Service.BAL.Mail.Worker
         public FeedbackSubmitWorker(
             IEmailService emailService,
             IMailProcessDAL mailProcessDAL,
-            MailConcurrencyLimiter limiter
-            ) : base(emailService, mailProcessDAL, limiter) { }
+            MailConcurrencyLimiter limiter,
+            ILogger<BaseMailWorker> logger
+            ) : base(emailService, mailProcessDAL, limiter, logger) { }
 
         protected override string ProcessCode => "FEEDBACK_ESC_LGC";
     }
