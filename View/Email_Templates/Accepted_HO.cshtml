@@ -8,12 +8,12 @@
 </head>
 <body>
     <p>
-        Dear Service Partner <span style="color: red;">({{ShipToCode}}) </span>,
+        Dear Service Partner <span style="color: red;">(@Model.ShipToCode) </span>,
     </p>
     <br />
     <p>
         Herewith find yesterday's accepted claims for the<span style="color: red; font-weight: bold;">
-         "{{AuditMonth}}"</span> month against Data Audit.
+         "@Model.AuditMonth"</span> month against Data Audit.
     </p>
     <br />
 
@@ -29,75 +29,17 @@
         </tr>
     </thead>
     <tbody>
-        {{TableRows}} 
-        
-}
+        @if (Model.Rows != null && Model.Rows.Any())
+        {
+            foreach (var item in Model.Rows)
+            {
+                <tr>
+                    <td>@item.AuditHead</td>
+                    <td>@item.AcceptedCount</td>
+                </tr>
+            }
+        }
     </tbody>
 </table>
 </body>
 </html>
-
-
-
-@* <body>
-
-    <p>
-        Dear Service Partner
-        <span style="color:red;">
-            (@Model.ShipToCode)
-        </span>,
-    </p>
-
-    <br />
-
-    <p>
-        Herewith find yesterday's accepted claims for the
-        <span style="color:red;font-weight:bold;">
-            @Model.AuditMonth
-        </span>
-        month against Data Audit.
-    </p>
-
-    <br />
-
-    <table style="border-collapse:collapse;width:40%;border:1px solid black;">
-
-        <thead>
-
-            <tr>
-
-                <th style="border:1px solid black;padding:8px;text-align:center;color:red;">
-                    Audit Head
-                </th>
-
-                <th style="border:1px solid black;padding:8px;text-align:center;">
-                    Accepted Count
-                </th>
-
-            </tr>
-
-        </thead>
-
-        <tbody>
-
-            @foreach (var item in Model.Rows)
-            {
-                <tr>
-
-                    <td style="border:1px solid black;padding:8px;">
-                        @item.AuditHead
-                    </td>
-
-                    <td style="border:1px solid black;padding:8px;text-align:center;">
-                        @item.AcceptedCount
-                    </td>
-
-                </tr>
-            }
-
-        </tbody>
-
-    </table>
-
-</body>
- *@

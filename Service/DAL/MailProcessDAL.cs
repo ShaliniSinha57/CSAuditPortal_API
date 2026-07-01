@@ -50,9 +50,9 @@ namespace CallAuditPortal1.Service.DAL
                 model.ValidTill = reader["VALID_TILL"]?.ToString() ?? "";
                 model.CompanyName = reader["COMPANY_NAME"]?.ToString() ?? "";
                 model.EventType = reader["EVENT_TYPE"]?.ToString() ?? "";
-                model.CreatedBy = reader["CREATED_BY"]?.ToString() ?? "";
                 model.MailTo = reader["MAIL_TO"]?.ToString() ?? "";
                 model.MailCc = reader["MAIL_CC"]?.ToString() ?? "";
+                model.RowIds = reader["ROW_IDS"]?.ToString() ?? "";
                 string summaryJson = reader["SUMMARY_JSON"]?.ToString() ?? "[]";
                 model.Rows = ConvertJsonToRows(summaryJson);
                 mailList.Add(model);

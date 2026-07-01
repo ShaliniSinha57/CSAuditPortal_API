@@ -7,9 +7,9 @@
     <title>Rejected Mail</title>
 </head>
 <body>
-    <p> Dear Service Partner <span style="color: red;"> ({{ShipToCode}}) </span>, </p>
+    <p> Dear Service Partner <span style="color: red;"> (@Model.ShipToCode) </span>, </p>
     <br />
-    <p> Herewith find yesterday's rejected claims for the <span style="color: red; font-weight: bold;"> "{{AuditMonth}}" </span> month against Data Audit. </p>
+    <p> Herewith find yesterday's rejected claims for the <span style="color: red; font-weight: bold;"> "@Model.AuditMonth" </span> month against Data Audit. </p>
     <p> You are requested to check again and provide your feedback accordingly. If there is any GAP, please update it; otherwise, accept the same in the system before the due date. </p>
     <br />
     <table>
@@ -26,72 +26,17 @@
             </tr>
         </thead>
         <tbody>
-            {{TableRows}}
+            @if (Model.Rows != null && Model.Rows.Any())
+            {
+                foreach (var item in Model.Rows)
+                {
+                    <tr>
+                        <td>@item.AuditHead</td>
+                        <td>@item.RejectedCount</td>
+                    </tr>
+                }
+            }
         </tbody>
     </table>
 </body>
 </html>
-
-                    
-@* <body>
-
-    <p>
-        Dear Service Partner
-        <span style="color:red;">
-            (@Model.ShipToCode)
-        </span>,
-    </p>
-
-    <br />
-
-    <p>
-        Herewith find yesterday's rejected claims for the
-        <span style="color:red;font-weight:bold;">
-            @Model.AuditMonth
-        </span>
-        month against Data Audit. 
-    </p>
-
-    <br />
-
-    <table style="border-collapse:collapse;width:40%;border:1px solid black;">
-
-        <thead>
-
-            <tr>
-
-                <th style="border:1px solid black;padding:8px;text-align:center;color:red;">
-                    Audit Head
-                </th>
-
-                <th style="border:1px solid black;padding:8px;text-align:center;">
-                    Rejected  Count
-                </th>
-
-            </tr>
-
-        </thead>
-
-        <tbody>
-
-            @foreach (var item in Model.Rows)
-            {
-                <tr>
-
-                    <td style="border:1px solid black;padding:8px;">
-                        @item.AuditHead
-                    </td>
-
-                    <td style="border:1px solid black;padding:8px;text-align:center;">
-                        @item.RejectedCount
-                    </td>
-
-                </tr>
-            }
-
-        </tbody>
-
-    </table>
-
-</body>
- *@

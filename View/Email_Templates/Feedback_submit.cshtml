@@ -9,7 +9,7 @@
 <body>
     <p style="font-size:16px;"> Dear HO Team Member, </p>
     <br/>
-    <p> Enclosed find the Data Audit Feedback Result for the <span style="color:red; font-weight:bold;"> "{{AuditMonth}}" </span> month uploaded in Next CS-Net System. 
+    <p> Enclosed find the Data Audit Feedback Result for the <span style="color:red; font-weight:bold;"> "@Model.AuditMonth" </span> month uploaded in Next CS-Net System. 
         You are requested to check & provide your feedback to the reverted cases. </p>
     <p style="font-size:18px; font-weight:bold;"> Summary: </p>
     <br>
@@ -31,66 +31,18 @@
             </tr>
         </thead>
         <tbody>
-            {{TableRows}}
-        </tbody>
-    </table>
-
-</body>
-</html>
-
-@*
-<body>
-    <p style="font-size:16px;"> Dear HO Team Member, </p>
-    <br />
-    <p>
-        Enclosed find the Data Audit Feedback Result for the 
-        <span style="color:red;font-weight:bold;">
-            @Model.AuditMonth
-        
-    </span> month uploaded in Next CS-Net System.
-        You are requested to check & provide your feedback to the reverted cases.
-    </p>
-    <p style="font-size:18px; font-weight:bold;"> Summary: </p>
-    <br>
-    <table>
-        <thead>
-            <tr>
-                <th align="left"
-                    style="padding: 10px 12px;background: #f1f5f9;border-bottom: 1px solid #e6eef8; font-size: 13px; color: #0b3b66; text-align:left;">
-                    ESC Name
-                </th>
-                <th align="left"
-                    style="padding: 10px 12px;background: #f1f5f9;border-bottom: 1px solid #e6eef8; font-size: 13px; color: #0b3b66; text-align:left;">
-                    Audit Head
-                </th>
-                <th align="left"
-                    style="padding: 10px 12px;background: #f1f5f9;border-bottom: 1px solid #e6eef8; font-size: 13px; color: #0b3b66; text-align:left;">
-                    Feedback Submit Count
-                </th>
-            </tr>
-        </thead>
-        @model CallAuditPortal1.Model.RequestDTO.AcceptedMailModel
-
-        <tbody>
-            @foreach (var item in Model.Rows)
+            @if (Model.Rows != null && Model.Rows.Any())
             {
-                <tr>
-                    <td style="border:1px solid black;padding:8px;">
-                        @item.EscName
-                    </td>
-
-                    <td style="border:1px solid black;padding:8px;">
-                        @item.AuditHead
-                    </td>
-
-                    <td style="border:1px solid black;padding:8px;text-align:center;">
-                        @item.FeedbackSubmitCount
-                    </td>
-                </tr>
+                foreach (var item in Model.Rows)
+                {
+                    <tr>
+                        <td></td>
+                        <td>@item.AuditHead</td>
+                        <td>@item.FeedbackSubmitCount</td>
+                    </tr>
+                }
             }
         </tbody>
     </table>
-
 </body>
-
-   *@
+</html>

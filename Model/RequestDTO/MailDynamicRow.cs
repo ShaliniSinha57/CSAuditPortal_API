@@ -33,15 +33,8 @@
 
         public string Subject { get; set; } = string.Empty;
 
-        public string Header { get; set; } = string.Empty;
-
-        public string Footer { get; set; } = string.Empty;
-
-        public string AttachmentFile { get; set; } = string.Empty;
-
         public string EventType { get; set; } = string.Empty;
-
-        public string CreatedBy { get; set; } = string.Empty;
+        public string RowIds { get; set; } = string.Empty;
 
         public List<MailDynamicRow> Rows { get; set; } = new();
     }

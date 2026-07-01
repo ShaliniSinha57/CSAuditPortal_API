@@ -25,10 +25,6 @@ namespace CallAuditPortal1.Service
                 string html = await _razorRenderer.RenderAsync(
                             template,
                             email);
-                var introMessage = @"<p>Dear User,</p> <p>This is the scheme that has been approved:</p>        ";
-                var footer = @"<p style='font-size:12px; color:#777;'>This is an automated message from LG CS AuditPortal </p>";
-               
-                var finalBody = introMessage + html + footer;
                 using var smtp = new SmtpClient(_smtpSettings.Host)
                 {
                     Port = _smtpSettings.Port > 0 ? _smtpSettings.Port : 25,
@@ -40,7 +36,7 @@ namespace CallAuditPortal1.Service
                 {
                     From = new MailAddress(_smtpSettings.UserName, _smtpSettings.DisplayName),
                     Subject = email.MailSubject,
-                    Body = finalBody,
+                    Body = html,
                     IsBodyHtml = true,
                 };
 
@@ -75,7 +71,7 @@ namespace CallAuditPortal1.Service
                 "SUBMIT_PROCESS" => "Email_Templates/Successful.cshtml",
                 "HO_ACCEPT" => "Email_Templates/Accepted_HO.cshtml",
                 "HO_REJECT" => "Email_Templates/Rejected_HO.cshtml",
-                "FEEDBACK_ESC_LGC" => "Email_Templates/Feedback.cshtml",
+                "FEEDBACK_ESC_LGC" => "Email_Templates/Feedback_submit.cshtml",
                 _ => throw new Exception("Invalid Process")
             };
         }

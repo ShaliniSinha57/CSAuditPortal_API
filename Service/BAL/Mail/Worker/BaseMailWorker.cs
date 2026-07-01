@@ -46,13 +46,12 @@ namespace CallAuditPortal1.Service.BAL.Mail.Worker
             await _limiter.Semaphore.WaitAsync();
             try
             {
+                await _mailDataLoader.UpdateMailStatusAsync(mail.RowIds, MailStatus.Processing);
                 var emailModel = new Email
                 {
                     To = mail.MailTo,
                     CC = mail.MailCc,
                     MailSubject = mail.Subject,
-                    Header = mail.Header,
-                    Footer = mail.Footer,
                     ShipToCode = mail.ShipToCode,
                     CompanyName = mail.CompanyName,
                     AuditMonth = mail.AuditMonth,
@@ -60,11 +59,22 @@ namespace CallAuditPortal1.Service.BAL.Mail.Worker
                     Rows = mail.Rows
                 };
                 await _mailService.SendEmailAsync(emailModel, ProcessCode);
-                _logger.LogInformation("Mail sent successfully to {Email}",emailModel.To);
+                await _mailDataLoader.UpdateMailStatusAsync(mail.RowIds, MailStatus.Success);
+                _logger.LogInformation(
+                    "Process: {ProcessCode}, RowIds: {RowIds}, Mail sent successfully to {Email}",
+                    ProcessCode,
+                    mail.RowIds,
+                    emailModel.To);
             }
             catch(Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                await _mailDataLoader.UpdateMailStatusAsync(mail.RowIds, MailStatus.Retrying, ex.Message);
+                _logger.LogError(
+                    ex,
+                    "Process: {ProcessCode}, RowIds: {RowIds}, Failed to send mail to {Email}",
+                    ProcessCode,
+                    mail.RowIds,
+                    mail.MailTo);
             }
             finally
             {
