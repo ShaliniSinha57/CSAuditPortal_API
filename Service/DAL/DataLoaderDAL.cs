@@ -35,21 +35,21 @@ namespace CallAuditPortal1.Service.DAL
 
                         cmd.Parameters.Add("P_FILEID", OracleDbType.Varchar2).Value = sessionId;
                         cmd.Parameters.Add("P_FILETYPEID", OracleDbType.Int32).Value = Convert.ToInt32(templateId);
-
+                        cmd.Parameters.Add("P_USER_ID", OracleDbType.Varchar2).Value = userName;
                         //Output
-                        cmd.Parameters.Add("P_STATUS_FLAG", OracleDbType.Int32).Direction = ParameterDirection.Output;
                         cmd.Parameters.Add("P_INS_COUNT", OracleDbType.Int32).Direction = ParameterDirection.Output;
                         cmd.Parameters.Add("P_UPD_COUNT", OracleDbType.Int32).Direction = ParameterDirection.Output;
                         cmd.Parameters.Add("P_ERR_COUNT", OracleDbType.Int32).Direction = ParameterDirection.Output;
+                        cmd.Parameters.Add("P_STATUS_FLAG", OracleDbType.Int32).Direction = ParameterDirection.Output;
                         cmd.Parameters.Add("P_STATUS_MSG", OracleDbType.Varchar2, 4000).Direction = ParameterDirection.Output;
                         
                         await cmd.ExecuteNonQueryAsync();
 
-                        string message = cmd.Parameters["P_STATUS_MSG"].Value.ToString();
-                        int flag = GetOracleInt(cmd.Parameters["P_STATUS_FLAG"]);
                         int insertCount = GetOracleInt(cmd.Parameters["P_INS_COUNT"]);
                         int updateCount = GetOracleInt(cmd.Parameters["P_UPD_COUNT"]);
                         int errorCount = GetOracleInt(cmd.Parameters["P_ERR_COUNT"]);
+                        int flag = GetOracleInt(cmd.Parameters["P_STATUS_FLAG"]);
+                        string message = cmd.Parameters["P_STATUS_MSG"].Value.ToString();
 
 
                         return (message, flag == 0, insertCount: insertCount, updateCount, errorCount);
